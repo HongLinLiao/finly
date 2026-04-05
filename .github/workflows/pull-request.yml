@@ -1,0 +1,17 @@
+name: pull-request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  build-code:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-code.yml
+    secrets: inherit

@@ -1,0 +1,19 @@
+import { ReactNode } from "react";
+
+interface PageProps {
+  children: ReactNode;
+}
+
+const MainLayout = ({ children }: PageProps) => {
+  return (
+    <div className="dark relative min-h-screen overflow-hidden bg-black text-zinc-100">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(82,82,91,0.2),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(63,63,70,0.18),transparent_28%),linear-gradient(180deg,#020202_0%,#090909_48%,#000000_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.08] bg-[linear-gradient(rgba(63,63,70,0.25)_1px,transparent_1px),linear-gradient(90deg,rgba(63,63,70,0.25)_1px,transparent_1px)] [background-size:28px_28px]" />
+      <main className="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+export default MainLayout;

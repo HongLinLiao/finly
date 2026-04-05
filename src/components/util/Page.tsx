@@ -1,11 +1,13 @@
 import { ReactNode } from "react";
 
+import MainLayout from "./layout/main-layout";
+
 interface PageProps {
   children: ReactNode;
 }
 
 const Page = ({ children }: PageProps) => {
-  return <div>{children}</div>;
+  return <MainLayout>{children}</MainLayout>;
 };
 
 export default Page;

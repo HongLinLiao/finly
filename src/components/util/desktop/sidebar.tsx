@@ -3,6 +3,7 @@
 import { ChartCandlestick, HandCoins, House } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { type CSSProperties } from "react";
 
 import {
@@ -11,7 +12,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -24,12 +24,14 @@ interface DesktopSidebarProps {
 }
 
 const DESKTOP_MENU = [
-  { title: "首頁", icon: House, href: "/", active: true },
-  { title: "基金", icon: HandCoins, href: "#", active: false },
-  { title: "股票", icon: ChartCandlestick, href: "#", active: false },
+  { title: "首頁", icon: House, href: "/" },
+  { title: "基金", icon: HandCoins, href: "#" },
+  { title: "股票", icon: ChartCandlestick, href: "/stocks" },
 ] as const;
 
 const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
+  const pathname = usePathname();
+
   return (
     <Sidebar
       className={cn("group-data-[side=left]:border-r-0", className)}
@@ -74,20 +76,31 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
             <SidebarMenu className="gap-1">
               {DESKTOP_MENU.map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={item.active}
-                    className={cn(
-                      "h-10 rounded-xl border border-transparent text-zinc-300 hover:border-white/15 hover:bg-zinc-800/80 hover:text-zinc-100",
-                      item.active &&
-                        "border-white/20 bg-zinc-800 text-zinc-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                    )}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  {(() => {
+                    const isActive =
+                      item.href === "#"
+                        ? false
+                        : item.href === "/"
+                          ? pathname === "/"
+                          : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+
+                    return (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={cn(
+                          "h-10 rounded-xl border border-transparent text-zinc-300 hover:border-white/15 hover:bg-zinc-800/80 hover:text-zinc-100",
+                          isActive &&
+                            "border-white/20 bg-zinc-800 text-zinc-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                        )}
+                      >
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    );
+                  })()}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

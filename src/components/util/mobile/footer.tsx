@@ -1,24 +1,25 @@
 "use client";
 
 import { ChartCandlestick, HandCoins, House } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-type FooterTab = "fund" | "home" | "stock";
-
 const FOOTER_TABS: Array<{
-  value: FooterTab;
+  value: "fund" | "home" | "stock";
   label: string;
+  href: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { value: "fund", label: "基金", icon: HandCoins },
-  { value: "home", label: "首頁", icon: House },
-  { value: "stock", label: "股票", icon: ChartCandlestick },
+  { value: "fund", label: "基金", href: "#", icon: HandCoins },
+  { value: "home", label: "首頁", href: "/", icon: House },
+  { value: "stock", label: "股票", href: "/stocks", icon: ChartCandlestick },
 ];
 
 const Footer = () => {
-  const [activeTab, setActiveTab] = useState<FooterTab>("home");
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const stopTimerRef = useRef<number | null>(null);
@@ -84,13 +85,15 @@ const Footer = () => {
         <div className="relative grid grid-cols-3 gap-1">
           {FOOTER_TABS.map(tab => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.value;
+            const isActive =
+              tab.href === "/"
+                ? pathname === "/"
+                : pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
 
             return (
-              <button
+              <Link
                 key={tab.value}
-                type="button"
-                onClick={() => setActiveTab(tab.value)}
+                href={tab.href}
                 className={cn(
                   "group relative flex h-12 min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl",
                   "text-[11px] font-semibold tracking-[0.02em] text-zinc-200 transition-all duration-200",
@@ -108,7 +111,7 @@ const Footer = () => {
                   )}
                 />
                 <span className="leading-none">{tab.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>

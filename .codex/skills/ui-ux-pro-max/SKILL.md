@@ -249,6 +249,25 @@ python3 .codex/skills/ui-ux-pro-max/scripts/search.py "fintech dashboard" --desi
 - If user explicitly specifies another stack: follow user choice
 - If both shadcn and ui-ux-pro-max are requested: keep shadcn structure, apply ui-ux-pro-max style via tokens/variants/layout patterns
 
+## Project Preset: Finly (Auto-Apply)
+
+When working inside the `finly` repo, apply this visual preset by default unless the user explicitly asks for a different theme:
+
+1. Theme direction: dark fintech with emerald/green as the primary accent
+2. Contrast rule: avoid near-identical black-on-black layers; floating surfaces must be visually separable from page background
+3. Token mapping preference:
+   - `--primary`: emerald range (`#10B981` to `#34D399`)
+   - `--accent`: deep green tint (`#052E2B` / translucent variants)
+   - `--background`: keep dark neutral base, but component surfaces should include green-tinted depth
+4. Interaction states:
+   - active/selected: green tint + subtle inner stroke
+   - hover: brighter green text/icon emphasis
+   - focus: visible green focus ring preserving accessibility contrast
+5. Icon color policy: use neutral-emerald hierarchy, never default to amber/purple in Finly unless requested
+
+Operational shortcut:
+- For Finly UI requests, do not require repeated user prompts for "green theme" or "contrast from black background"; assume these as defaults.
+
 ## Common Professional UI Rules
 
 1. Use SVG icon systems (Lucide/Heroicons/Simple Icons), not emoji as UI icons

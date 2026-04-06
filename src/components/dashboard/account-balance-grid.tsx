@@ -15,7 +15,9 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
     <section className="space-y-4">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-50">台外幣餘額總覽</h2>
+          <h2 className="mt-1 text-xl font-semibold text-foreground dark:text-zinc-50">
+            台外幣餘額總覽
+          </h2>
         </div>
       </div>
 

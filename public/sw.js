@@ -48,6 +48,11 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  if (requestUrl.pathname.startsWith("/_next/")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {

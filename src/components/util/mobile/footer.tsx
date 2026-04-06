@@ -1,24 +1,25 @@
 "use client";
 
 import { ChartCandlestick, HandCoins, House } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-type FooterTab = "fund" | "home" | "stock";
-
 const FOOTER_TABS: Array<{
-  value: FooterTab;
+  value: "fund" | "home" | "stock";
   label: string;
+  href: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { value: "fund", label: "基金", icon: HandCoins },
-  { value: "home", label: "首頁", icon: House },
-  { value: "stock", label: "股票", icon: ChartCandlestick },
+  { value: "fund", label: "基金", href: "#", icon: HandCoins },
+  { value: "home", label: "首頁", href: "/", icon: House },
+  { value: "stock", label: "股票", href: "/stocks", icon: ChartCandlestick },
 ];
 
 const Footer = () => {
-  const [activeTab, setActiveTab] = useState<FooterTab>("home");
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const stopTimerRef = useRef<number | null>(null);
@@ -74,29 +75,30 @@ const Footer = () => {
     >
       <nav
         className={cn(
-          "relative mx-auto w-[min(92vw,430px)] overflow-hidden rounded-[22px] border border-white/10",
-          "bg-[linear-gradient(180deg,rgba(8,23,19,0.92),rgba(4,14,12,0.95))] p-1.5 text-zinc-200",
-          "shadow-[0_24px_42px_-24px_rgba(16,185,129,0.5)] ring-1 ring-inset ring-white/5 backdrop-blur-xl"
+          "relative mx-auto w-[min(92vw,430px)] overflow-hidden rounded-[22px] border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,252,248,0.96))] p-1.5 text-foreground shadow-[0_24px_42px_-24px_rgba(16,185,129,0.35)] ring-1 ring-inset ring-emerald-200/55 backdrop-blur-xl",
+          "dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,19,0.92),rgba(4,14,12,0.95))] dark:text-zinc-200 dark:ring-white/5 dark:shadow-[0_24px_42px_-24px_rgba(16,185,129,0.5)]"
         )}
       >
-        <div className="pointer-events-none absolute -top-16 left-1/2 h-24 w-40 -translate-x-1/2 rounded-full bg-emerald-300/10 blur-2xl" />
+        <div className="pointer-events-none absolute -top-16 left-1/2 h-24 w-40 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-2xl dark:bg-emerald-300/10" />
 
         <div className="relative grid grid-cols-3 gap-1">
           {FOOTER_TABS.map(tab => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.value;
+            const isActive =
+              tab.href === "/"
+                ? pathname === "/"
+                : pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
 
             return (
-              <button
+              <Link
                 key={tab.value}
-                type="button"
-                onClick={() => setActiveTab(tab.value)}
+                href={tab.href}
                 className={cn(
                   "group relative flex h-12 min-w-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl",
-                  "text-[11px] font-semibold tracking-[0.02em] text-zinc-200 transition-all duration-200",
+                  "text-[11px] font-semibold tracking-[0.02em] text-muted-foreground transition-all duration-200 dark:text-zinc-200",
                   isActive
-                    ? "bg-emerald-400/12 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.42)]"
-                    : "hover:bg-white/5"
+                    ? "bg-primary/15 text-foreground shadow-[inset_0_0_0_1px_rgba(16,185,129,0.38)] dark:bg-emerald-400/12 dark:text-zinc-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.42)]"
+                    : "hover:bg-emerald-100/70 hover:text-foreground dark:hover:bg-white/5"
                 )}
                 aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
@@ -104,11 +106,11 @@ const Footer = () => {
                 <Icon
                   className={cn(
                     "size-3.75 transition-transform duration-200",
-                    isActive && "scale-110 text-zinc-50"
+                    isActive && "scale-110 text-foreground dark:text-zinc-50"
                   )}
                 />
                 <span className="leading-none">{tab.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>

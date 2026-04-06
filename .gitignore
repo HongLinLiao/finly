@@ -47,3 +47,10 @@ next-env.d.ts
 !.codex/
 !.codex/**/
 !.codex/**/*.md
+
+# .copilot
+.github/prompts
+.github/prompts/**
+!.github/prompts/
+!.github/prompts/**/
+!.github/prompts/**/*.md

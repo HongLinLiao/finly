@@ -22,16 +22,18 @@ export function AccountBalanceCard({ account }: AccountBalanceCardProps) {
   const pendingRatio = (account.pending / total) * 100;
 
   return (
-    <Card className="group relative h-full overflow-hidden border-zinc-900/80 bg-[linear-gradient(165deg,#101113_0%,#0a0b0d_100%)] py-0 shadow-[0_20px_40px_-24px_rgba(0,0,0,1)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_56px_-30px_rgba(0,0,0,1)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(34,197,94,0.14),transparent_38%)]" />
+    <Card className="group relative h-full overflow-hidden py-0 shadow-md transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(16,185,129,0.12),transparent_38%)] dark:bg-[radial-gradient(circle_at_100%_0%,rgba(52,211,153,0.14),transparent_38%)]" />
 
       <CardContent className="relative space-y-4 px-5 py-5">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-medium text-zinc-200">{account.accountName}</h3>
+            <h3 className="text-sm font-medium text-foreground/90 dark:text-zinc-200">
+              {account.accountName}
+            </h3>
           </div>
 
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-emerald-300 ring-1 ring-zinc-800">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/30">
             {account.kind === "twd" ? (
               <Landmark className="h-4 w-4" />
             ) : (
@@ -41,34 +43,34 @@ export function AccountBalanceCard({ account }: AccountBalanceCardProps) {
         </header>
 
         <section>
-          <p className="text-xs text-zinc-500">總餘額</p>
-          <p className="mt-1 text-[1.65rem] leading-none font-semibold tracking-tight text-zinc-50">
+          <p className="text-xs text-muted-foreground dark:text-zinc-500">總餘額</p>
+          <p className="mt-1 text-[1.65rem] leading-none font-semibold tracking-tight text-foreground dark:text-zinc-50">
             {formatCurrency(account.balance, account.currency)}
           </p>
         </section>
 
         <section className="grid grid-cols-2 gap-2.5">
-          <div className="rounded-xl bg-zinc-900/70 p-3 ring-1 ring-zinc-800/80">
-            <p className="text-[11px] text-zinc-500">可動用</p>
-            <p className="mt-1 text-sm font-medium text-zinc-100">
+          <div className="rounded-xl bg-emerald-50/70 p-3 ring-1 ring-emerald-200/80 dark:bg-emerald-950/20 dark:ring-emerald-500/25">
+            <p className="text-[11px] text-muted-foreground dark:text-zinc-500">可動用</p>
+            <p className="mt-1 text-sm font-medium text-foreground dark:text-zinc-100">
               {formatCurrency(account.available, account.currency)}
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
               <div
-                className="h-full rounded-full bg-emerald-400"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${Math.max(8, Math.min(availableRatio, 100))}%` }}
               />
             </div>
           </div>
 
-          <div className="rounded-xl bg-zinc-900/70 p-3 ring-1 ring-zinc-800/80">
-            <p className="text-[11px] text-zinc-500">待交割</p>
-            <p className="mt-1 text-sm font-medium text-zinc-100">
+          <div className="rounded-xl bg-emerald-50/70 p-3 ring-1 ring-emerald-200/80 dark:bg-emerald-950/20 dark:ring-emerald-500/25">
+            <p className="text-[11px] text-muted-foreground dark:text-zinc-500">待交割</p>
+            <p className="mt-1 text-sm font-medium text-foreground dark:text-zinc-100">
               {formatCurrency(account.pending, account.currency)}
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
               <div
-                className="h-full rounded-full bg-zinc-400"
+                className="h-full rounded-full bg-muted-foreground/45"
                 style={{ width: `${Math.max(8, Math.min(pendingRatio, 100))}%` }}
               />
             </div>

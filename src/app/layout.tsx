@@ -1,6 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
@@ -10,7 +10,11 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#f7faf8",
 };
 
 export default function RootLayout({
@@ -60,7 +64,7 @@ export default function RootLayout({
         geistSans.variable,
         geistMono.variable,
         "font-sans",
-        inter.variable
+        ibmPlexSans.variable
       )}
       suppressHydrationWarning
     >

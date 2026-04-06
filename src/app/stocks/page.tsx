@@ -42,7 +42,9 @@ const Stocks = () => {
     <Page>
       <section className="space-y-5">
         <header className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">股票交易明細</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground dark:text-zinc-50">
+            股票交易明細
+          </h1>
         </header>
 
         <StockFilterPanel

@@ -28,7 +28,7 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
 
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
-      <Card className="border border-zinc-800/85 bg-zinc-950/75 py-4 transition-colors hover:border-zinc-600/90">
+      <Card className="py-4 shadow-sm transition-shadow hover:shadow-md">
         <CardContent className="px-4">
           <CollapsibleTrigger asChild>
             <button
@@ -37,7 +37,7 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
               aria-label={`${item.symbol} ${sideLabels[item.side]} 交易明細`}
             >
               <ChevronDown
-                className={`absolute top-0.5 right-0 size-4 shrink-0 text-zinc-400 transition-transform duration-200 ${
+                className={`absolute top-0.5 right-0 size-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
                   open ? "rotate-180" : ""
                 }`}
               />
@@ -46,8 +46,8 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
                 <span
                   className={`inline-flex size-9 items-center justify-center rounded-xl ${
                     sideIsBuy
-                      ? "bg-emerald-500/12 text-emerald-300"
-                      : "bg-rose-500/15 text-rose-300"
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                      : "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
                   }`}
                 >
                   {sideIsBuy ? (
@@ -58,38 +58,25 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
                 </span>
 
                 <div className="min-w-0 space-y-1.5">
-                  <p className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground dark:text-zinc-100">
                     <span>{item.symbol}</span>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        sideIsBuy
-                          ? "border-0 bg-emerald-500/15 text-emerald-300"
-                          : "border-0 bg-rose-500/15 text-rose-300"
-                      }
-                    >
+                    <Badge variant={sideIsBuy ? "secondary" : "destructive"}>
                       {sideLabels[item.side]}
                     </Badge>
                   </p>
 
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge
-                      variant="outline"
-                      className="border-zinc-700 bg-zinc-900/70 text-zinc-300"
-                    >
+                    <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
                       {boardLotLabels[item.boardLotType ?? "regular"]}
-                    </Badge>
+                    </span>
                     {item.market ? (
-                      <Badge
-                        variant="outline"
-                        className="border-zinc-700 bg-zinc-900/70 text-zinc-300"
-                      >
+                      <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
                         {item.market}
-                      </Badge>
+                      </span>
                     ) : null}
                   </div>
 
-                  <p className="truncate text-xs text-zinc-400 sm:whitespace-normal">
+                  <p className="truncate text-xs text-muted-foreground dark:text-zinc-400 sm:whitespace-normal">
                     {account?.accountName ?? account?.brokerName ?? "未知帳戶"} ·{" "}
                     {formatDateTime(item.tradeDate)}
                   </p>
@@ -97,11 +84,11 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
               </div>
 
               <div className="flex items-end justify-between gap-3 pl-12">
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-muted-foreground dark:text-zinc-400">
                   {formatNumber(item.quantity)} 股 · 單價{" "}
                   {formatCurrency(item.unitPrice, item.currency)}
                 </p>
-                <p className="shrink-0 text-right text-base font-semibold text-zinc-100 sm:text-sm">
+                <p className="shrink-0 text-right text-base font-semibold text-foreground dark:text-zinc-100 sm:text-sm">
                   {formatCurrency(item.netAmount, item.currency)}
                 </p>
               </div>
@@ -109,7 +96,7 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
           </CollapsibleTrigger>
 
           <CollapsibleContent className="pt-4">
-            <Separator className="mb-4 bg-zinc-800" />
+            <Separator className="mb-4" />
             <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
               <DetailField label="交易編號" value={item.id} />
               <DetailField label="市場" value={item.market ?? "—"} />
@@ -142,9 +129,9 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-1 break-all text-sm text-zinc-100">{value}</p>
+    <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-500/25 dark:bg-emerald-950/20">
+      <p className="text-xs text-muted-foreground dark:text-zinc-500">{label}</p>
+      <p className="mt-1 break-all text-sm text-foreground dark:text-zinc-100">{value}</p>
     </div>
   );
 }

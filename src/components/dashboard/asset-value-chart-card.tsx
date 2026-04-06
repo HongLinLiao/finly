@@ -2,7 +2,7 @@
 
 import { Pie, PieChart } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -27,7 +27,13 @@ function formatCurrency(value: number, currency: string) {
 
 export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) {
   const total = items.reduce((sum, item) => sum + item.marketValue, 0);
-  const palette = ["#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8", "#93c5fd"];
+  const palette = [
+    "var(--color-chart-1)",
+    "var(--color-chart-2)",
+    "var(--color-chart-3)",
+    "var(--color-chart-4)",
+    "var(--color-chart-5)",
+  ];
 
   const chartConfig = items.reduce<ChartConfig>((acc, item, index) => {
     acc[`slice${index}`] = {
@@ -50,9 +56,9 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
   }));
 
   return (
-    <Card className="border-zinc-800/90 bg-zinc-950/90 text-zinc-100 shadow-[0_20px_50px_-34px_rgba(0,0,0,1)]">
+    <Card className="shadow-md">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-zinc-50">{title}</CardTitle>
+        <h3 className="text-lg font-semibold text-foreground dark:text-zinc-50">{title}</h3>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -82,12 +88,12 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
                     return (
                       <div className="grid min-w-56 gap-2">
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-zinc-400">{name}</span>
-                          <span className="font-mono text-zinc-100">
+                          <span className="text-muted-foreground dark:text-zinc-400">{name}</span>
+                          <span className="font-mono text-foreground dark:text-zinc-100">
                             {formatCurrency(totalValue, currency)}
                           </span>
                         </div>
-                        <div className="space-y-1 border-t border-zinc-700/70 pt-1.5">
+                        <div className="space-y-1 border-t border-border/80 pt-1.5">
                           {accountValues.map(account => {
                             const ratio =
                               totalValue > 0 ? (account.marketValue / totalValue) * 100 : 0;
@@ -97,10 +103,14 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
                                 key={account.accountName}
                                 className="flex items-center justify-between gap-3"
                               >
-                                <span className="text-zinc-400">{account.accountName}</span>
-                                <span className="text-right font-mono text-zinc-100">
+                                <span className="text-muted-foreground dark:text-zinc-400">
+                                  {account.accountName}
+                                </span>
+                                <span className="text-right font-mono text-foreground dark:text-zinc-100">
                                   {formatCurrency(account.marketValue, currency)}
-                                  <span className="ml-1 text-zinc-500">({ratio.toFixed(1)}%)</span>
+                                  <span className="ml-1 text-muted-foreground dark:text-zinc-500">
+                                    ({ratio.toFixed(1)}%)
+                                  </span>
                                 </span>
                               </div>
                             );
@@ -138,13 +148,18 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
           {chartData.map(item => (
             <div
               key={item.key}
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs"
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-emerald-200/80 bg-emerald-50/70 px-3 py-2 text-xs dark:border-emerald-500/25 dark:bg-emerald-950/20"
             >
-              <p className="truncate text-zinc-300">
-                {item.name} <span className="text-zinc-500">{item.code}</span>
+              <p className="truncate text-foreground/90 dark:text-zinc-300">
+                {item.name}{" "}
+                <span className="text-muted-foreground dark:text-zinc-500">{item.code}</span>
               </p>
-              <p className="font-mono text-zinc-300">{item.ratio.toFixed(1)}%</p>
-              <p className="font-mono text-zinc-100">{formatCurrency(item.value, item.currency)}</p>
+              <p className="font-mono text-foreground/85 dark:text-zinc-300">
+                {item.ratio.toFixed(1)}%
+              </p>
+              <p className="font-mono text-foreground dark:text-zinc-100">
+                {formatCurrency(item.value, item.currency)}
+              </p>
             </div>
           ))}
         </div>

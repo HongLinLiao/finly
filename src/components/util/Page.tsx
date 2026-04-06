@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import MainLayout from "./layout/main-layout";
 
 interface PageProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const Page = ({ children }: PageProps) => {

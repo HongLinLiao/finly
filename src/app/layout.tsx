@@ -2,13 +2,13 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 
+import { ThemeProvider } from "@/components/provider/theme-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { cn } from "@/lib/utils";
 
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
-import "swiper/css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -62,12 +62,20 @@ export default function RootLayout({
         "font-sans",
         inter.variable
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <RegisterServiceWorker />
-        <SpeedInsights />
-        <Analytics />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <RegisterServiceWorker />
+          <SpeedInsights />
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   );

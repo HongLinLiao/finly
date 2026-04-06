@@ -8,6 +8,25 @@ export function RegisterServiceWorker() {
       return;
     }
 
+    // Avoid hydration and stale-asset issues during local development.
+    if (process.env.NODE_ENV !== "production") {
+      const cleanupDevServiceWorkers = async () => {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration => registration.unregister()));
+
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        }
+      };
+
+      cleanupDevServiceWorkers().catch(error => {
+        console.error("Service worker cleanup failed:", error);
+      });
+
+      return;
+    }
+
     const register = async () => {
       try {
         await navigator.serviceWorker.register("/sw.js");

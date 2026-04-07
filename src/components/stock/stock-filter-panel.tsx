@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 import { formatCurrency } from "./stock-transaction-data";
 
@@ -46,7 +47,7 @@ export function StockFilterPanel({
 }: StockFilterPanelProps) {
   return (
     <Card className="shadow-md">
-      <CardHeader className="pb-4">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Filter className="size-4 text-primary" />
           篩選條件
@@ -59,8 +60,9 @@ export function StockFilterPanel({
         </p>
       </CardHeader>
 
-      <CardContent className="pt-5">
-        <div className="grid gap-3 border-t border-border pt-5 md:grid-cols-3">
+      <CardContent className="pt-1">
+        <Separator />
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
           <div className="space-y-1.5">
             <p className="text-xs text-muted-foreground dark:text-zinc-500">證券帳戶</p>
             <Select value={accountFilter} onValueChange={onAccountFilterChange}>

@@ -185,6 +185,9 @@ Avoid long relative imports like `../../components/ui/button`.
 2. Do not hardcode utility colors for semantic UI states when theme tokens exist
 3. Keep both light and dark token sets (`:root` and `.dark`)
 4. Convert ui-ux-pro-max color/type recommendations into token values in `globals.css`
+5. When using design-system components, do not override color at the usage site with utility classes; let components consume semantic tokens from `globals.css`
+6. Plain HTML elements can use local Tailwind color utilities in feature/page files when needed
+7. Keep `globals.css` focused on reusable semantic theme tokens, not one-off page-specific color styling
 
 ### Composition & Variants
 

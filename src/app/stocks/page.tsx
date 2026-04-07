@@ -1,11 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AddStockTransactionDialog } from "@/components/stock/add-stock-transaction-dialog";
 import { StockFilterPanel } from "@/components/stock/stock-filter-panel";
 import { stockAccounts, stockTransactions } from "@/components/stock/stock-mock";
 import { StockTransactionEmpty } from "@/components/stock/stock-transaction-empty";
 import { StockTransactionItem } from "@/components/stock/stock-transaction-item";
+import { Button } from "@/components/ui/button";
 import Page from "@/components/util/Page";
 
 const Stocks = () => {
@@ -13,6 +16,7 @@ const Stocks = () => {
   const [sideFilter, setSideFilter] = useState("all");
   const [symbolFilter, setSymbolFilter] = useState("all");
   const [openedRows, setOpenedRows] = useState<Record<string, boolean>>({});
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const symbols = useMemo(
     () => Array.from(new Set(stockTransactions.map(item => item.symbol))).sort(),
@@ -79,6 +83,21 @@ const Stocks = () => {
             ))
           )}
         </div>
+
+        <Button
+          size="icon-lg"
+          className="fixed right-4 z-40 bottom-[calc(env(safe-area-inset-bottom)+98px)] rounded-full shadow-lg ring-1 ring-emerald-500/45 md:bottom-6 md:right-6"
+          aria-label="新增股票交易明細"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <Plus />
+        </Button>
+
+        <AddStockTransactionDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          accounts={stockAccounts}
+        />
       </section>
     </Page>
   );

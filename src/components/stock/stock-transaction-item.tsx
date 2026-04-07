@@ -129,7 +129,7 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-500/25 dark:bg-emerald-950/20">
+    <div className="rounded-2xl border border-border/80 bg-muted/60 px-3 py-2.5 dark:border-white/10 dark:bg-zinc-900/75">
       <p className="text-xs text-muted-foreground dark:text-zinc-500">{label}</p>
       <p className="mt-1 break-all text-sm text-foreground dark:text-zinc-100">{value}</p>
     </div>

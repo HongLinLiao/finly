@@ -22,7 +22,7 @@ export function AccountBalanceCard({ account }: AccountBalanceCardProps) {
   const pendingRatio = (account.pending / total) * 100;
 
   return (
-    <Card className="group relative h-full overflow-hidden py-0 shadow-md transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+    <Card className="group relative h-full overflow-hidden py-0 shadow-none transition duration-300">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(16,185,129,0.12),transparent_38%)] dark:bg-[radial-gradient(circle_at_100%_0%,rgba(52,211,153,0.14),transparent_38%)]" />
 
       <CardContent className="relative space-y-4 px-5 py-5">

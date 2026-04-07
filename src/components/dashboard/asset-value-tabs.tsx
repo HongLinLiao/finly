@@ -21,7 +21,7 @@ export function AssetValueTabs({ stockValues, fundValues }: AssetValueTabsProps)
       </div>
 
       <Tabs defaultValue="stock" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2 p-1">
+        <TabsList variant="segmented" className="grid w-full grid-cols-2 p-1">
           <TabsTrigger value="stock">股票現值</TabsTrigger>
           <TabsTrigger value="fund">基金現值</TabsTrigger>
         </TabsList>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 import { AccountBalanceCard } from "./account-balance-card";
 
@@ -21,22 +21,23 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
         </div>
       </div>
 
-      <Swiper
-        spaceBetween={16}
-        slidesPerView={1.05}
-        breakpoints={{
-          640: { slidesPerView: 1.8 },
-          1024: { slidesPerView: 2.4 },
-          1280: { slidesPerView: 3.2 },
-          1536: { slidesPerView: 4 },
+      <Carousel
+        opts={{
+          align: "start",
+          dragFree: true,
         }}
       >
-        {accounts.map(account => (
-          <SwiperSlide key={account.id}>
-            <AccountBalanceCard account={account} />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+        <CarouselContent className="-ml-4">
+          {accounts.map(account => (
+            <CarouselItem
+              key={account.id}
+              className="pl-4 basis-[95.238%] sm:basis-[55.556%] lg:basis-[41.667%] xl:basis-[31.25%] 2xl:basis-1/4"
+            >
+              <AccountBalanceCard account={account} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
     </section>
   );
 }

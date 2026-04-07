@@ -1,9 +1,9 @@
 "use client";
 
 import { Coins, Landmark, LineChart, PiggyBank } from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 import type { ComponentType } from "react";
 
@@ -34,7 +34,7 @@ function KpiCard({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className="h-full rounded-2xl py-0 shadow-md">
+    <Card className="h-full rounded-2xl py-0 shadow-none">
       <CardContent className="px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -91,21 +91,23 @@ export function PortfolioKpiStrip({
         </div>
       </div>
 
-      <Swiper
-        spaceBetween={12}
-        slidesPerView={1.2}
-        breakpoints={{
-          640: { slidesPerView: 2.05 },
-          1024: { slidesPerView: 3.05 },
-          1280: { slidesPerView: 4 },
+      <Carousel
+        opts={{
+          align: "start",
+          dragFree: true,
         }}
       >
-        {kpis.map(kpi => (
-          <SwiperSlide key={kpi.label} className="h-auto">
-            <KpiCard label={kpi.label} value={kpi.value} icon={kpi.icon} />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+        <CarouselContent className="-ml-3">
+          {kpis.map(kpi => (
+            <CarouselItem
+              key={kpi.label}
+              className="pl-3 basis-[83.333%] sm:basis-[48.78%] lg:basis-[32.79%] xl:basis-1/4"
+            >
+              <KpiCard label={kpi.label} value={kpi.value} icon={kpi.icon} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
     </section>
   );
 }

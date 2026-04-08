@@ -3,17 +3,17 @@
 import { Bell, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import useBreadcrumb from "@/hooks/state/use-breadcrumb";
+
+import { Breadcrumbs } from "../breadcrumb";
 
 const Header = () => {
+  const { breadcrumbs } = useBreadcrumb();
+
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-md">
       <div className="flex h-14 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-2.5">
-          <SidebarTrigger className="cursor-pointer" />
-          <span className="text-sm font-semibold tracking-[0.02em]">Dashboard</span>
-        </div>
-
+        <Breadcrumbs data={breadcrumbs} />
         <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" className="cursor-pointer" aria-label="搜尋">
             <Search className="size-4" />

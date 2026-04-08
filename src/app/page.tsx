@@ -16,6 +16,7 @@ function toTwdApprox(value: number, currency: string) {
 }
 
 export default function Home() {
+  const breadcrumbs = [{ label: "首頁", active: true }];
   const { cashAccounts, stockValues, fundValues } = dashboardOverviewMock;
 
   const twdCashTotal = cashAccounts
@@ -37,7 +38,7 @@ export default function Home() {
   );
 
   return (
-    <Page>
+    <Page breadcrumbs={breadcrumbs}>
       <PortfolioKpiStrip
         twdCashTotal={twdCashTotal}
         foreignCashTotal={foreignCashTotal}

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import Page from "@/components/util/Page";
 
 const Stocks = () => {
+  const breadcrumbs = [{ label: "股票", active: true }];
   const [accountFilter, setAccountFilter] = useState("all");
   const [sideFilter, setSideFilter] = useState("all");
   const [symbolFilter, setSymbolFilter] = useState("all");
@@ -43,7 +44,7 @@ const Stocks = () => {
   }, [filteredTransactions]);
 
   return (
-    <Page>
+    <Page breadcrumbs={breadcrumbs}>
       <section className="space-y-5">
         <header className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground dark:text-zinc-50">

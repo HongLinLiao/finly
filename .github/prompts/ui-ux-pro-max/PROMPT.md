@@ -86,6 +86,16 @@ Split decisions into two layers:
 - Component Layer (`shadcn`): semantics, accessibility, interaction structure.
 - Visual Layer (`ui-ux-pro-max`): tokens, spacing, typography, density, icon tone, animation.
 
+### Step 0.7: Reference-first consistency (required when user references an existing page)
+
+If the user says "refer to the current page" (for example, stocks page), that page is the primary visual baseline.
+
+- Match layout rhythm first: section order, spacing cadence, card weight, and information density.
+- Match visual intensity first: avoid adding hero gradients/glows if the reference page is restrained.
+- Keep labels neutral: field titles and static metadata should use neutral text hierarchy (`text-muted-foreground` family).
+- Restrict directional colors: green/red only for up/down or profit/loss values.
+- Run a final parity check: if the new page looks more aggressive than the reference page, reduce accents and effects.
+
 ### Step 1: Analyze requirements
 
 Extract:
@@ -272,6 +282,12 @@ When working in `finly`, use this preset unless user asks otherwise:
   - focus: visible green focus ring with accessible contrast.
 - Icon policy: neutral-emerald hierarchy; do not default to amber/purple unless requested.
 
+Consistency guardrail for Finly data pages:
+- Treat emerald as accent, not base paint.
+- Prefer neutral surfaces and neutral label colors.
+- Keep strongest color contrast on actionable controls and directional numeric values.
+- For sibling pages (funds vs stocks), preserve the existing page's visual weight unless user explicitly asks for a new art direction.
+
 ## Professional UI Baseline
 
 - Use SVG icon systems (Lucide, Heroicons, Simple Icons), not emoji as UI icons.
@@ -279,6 +295,10 @@ When working in `finly`, use this preset unless user asks otherwise:
 - Maintain readable contrast in light and dark themes.
 - Keep interactive targets discoverable (`cursor-pointer` where appropriate).
 - Prefer consistent spacing and type scale over ad-hoc pixel values.
+- For finance dashboards/lists:
+  - labels/field titles: neutral muted
+  - primary static values: foreground
+  - up/down values only: semantic directional colors
 
 ## Quick Summary
 

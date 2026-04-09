@@ -24,7 +24,7 @@ interface DesktopSidebarProps {
 
 const DESKTOP_MENU = [
   { title: "首頁", icon: House, href: "/" },
-  { title: "基金", icon: HandCoins, href: "#" },
+  { title: "基金", icon: HandCoins, href: "/funds" },
   { title: "股票", icon: ChartCandlestick, href: "/stocks" },
 ] as const;
 
@@ -64,23 +64,20 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
             <SidebarMenu className="gap-1">
               {DESKTOP_MENU.map(item => (
                 <SidebarMenuItem key={item.title}>
-                  {(() => {
-                    const isActive =
-                      item.href === "#"
-                        ? false
-                        : item.href === "/"
-                          ? pathname === "/"
-                          : pathname === item.href || pathname?.startsWith(`${item.href}/`);
-
-                    return (
-                      <SidebarMenuButton asChild isActive={isActive} className="h-10 rounded-xl">
-                        <Link href={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    );
-                  })()}
+                  <SidebarMenuButton
+                    asChild
+                    isActive={
+                      item.href === "/"
+                        ? pathname === "/"
+                        : pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                    }
+                    className="h-10 rounded-xl"
+                  >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

@@ -77,6 +77,22 @@ Before implementation, separate decisions into 2 layers:
 
 Rule: change appearance first; avoid rewriting shadcn component internals unless necessary.
 
+### Step 0.7: Reference-First Consistency (REQUIRED when user says "refer to current page")
+
+If user asks to "參考現在的頁面" (or equivalent), treat the referenced page as the primary visual source of truth.
+
+1. Match layout rhythm first:
+   - Keep the same information density, spacing cadence, card weight, and section hierarchy.
+   - Avoid introducing a new "hero" treatment if the reference page does not use one.
+2. Match color intensity first:
+   - Keep labels and field titles neutral (`text-muted-foreground` family).
+   - Use theme accent colors sparingly; do not flood the page with accent borders/glows.
+3. Financial color semantics:
+   - Green/red should be reserved for up/down or profit/loss values.
+   - Do not use green/red for static labels, field titles, or non-directional metadata.
+4. Re-check against reference before finishing:
+   - If the new page feels more visually aggressive than the reference, tone it down.
+
 ### Step 1: Analyze User Requirements
 
 Extract key information:
@@ -271,6 +287,12 @@ When working inside the `finly` repo, apply this visual preset by default unless
 Operational shortcut:
 - For Finly UI requests, do not require repeated user prompts for "green theme" or "contrast from black background"; assume these as defaults.
 
+Finly consistency guardrail (important):
+- Green is an accent, not a background system.
+- Prefer neutral surfaces and neutral label text.
+- Keep visual emphasis concentrated on actionable controls and directional numbers (P/L, return up/down).
+- When designing a peer page (e.g., funds vs stocks), default to matching the existing page's visual weight before adding new effects.
+
 ## Common Professional UI Rules
 
 1. Use SVG icon systems (Lucide/Heroicons/Simple Icons), not emoji as UI icons
@@ -278,6 +300,10 @@ Operational shortcut:
 3. Ensure readable contrast in light and dark themes
 4. Keep interactive targets discoverable (`cursor-pointer` where appropriate)
 5. Prefer consistent spacing and type scale over ad-hoc pixel values
+6. For data-heavy finance pages, prefer neutral text hierarchy:
+   - labels/titles: muted neutral
+   - primary values: foreground
+   - directional values only: semantic up/down colors
 
 ## Quick Workflow Summary
 

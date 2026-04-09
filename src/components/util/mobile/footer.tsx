@@ -13,7 +13,7 @@ const FOOTER_TABS: Array<{
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { value: "fund", label: "基金", href: "#", icon: HandCoins },
+  { value: "fund", label: "基金", href: "/funds", icon: HandCoins },
   { value: "home", label: "首頁", href: "/", icon: House },
   { value: "stock", label: "股票", href: "/stocks", icon: ChartCandlestick },
 ];

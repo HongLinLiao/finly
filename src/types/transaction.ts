@@ -1,13 +1,11 @@
 import type { BrokerageAccount } from "./account";
-import type { AssetKind, Timestamp, TradeSide } from "./common";
+import type { CurrencyCode, Timestamp, TradeSide } from "./common";
 import type { DividendMode, FundTransactionType } from "./fund";
 import type { BoardLotType } from "./stock";
 
 export interface BaseTransaction {
   /** 每筆交易唯一識別碼 */
   id: string;
-  /** 資產類型：股票或基金 */
-  assetType: AssetKind;
   /** 證券戶識別碼（對應 BrokerageAccount.id） */
   accountId: string;
   /** 交易日期（Unix timestamp） */
@@ -29,18 +27,16 @@ export interface BaseTransaction {
   /** 實際扣款或入帳金額 */
   netAmount: number;
   /** 幣別，例如 TWD、USD */
-  currency: string;
+  currency: CurrencyCode;
   /** 備註 */
   note?: string;
   /** 建立時間（Unix timestamp） */
-  createdAt?: Timestamp;
+  createdAt: Timestamp;
   /** 更新時間（Unix timestamp） */
-  updatedAt?: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface StockTransaction extends BaseTransaction {
-  /** 固定為 stock，供型別判斷使用 */
-  assetType: "stock";
   /** 股票代號 */
   symbol: string;
   /** 交易市場，例如 TWSE、NASDAQ */
@@ -50,8 +46,6 @@ export interface StockTransaction extends BaseTransaction {
 }
 
 export interface FundTransaction extends BaseTransaction {
-  /** 固定為 fund，供型別判斷使用 */
-  assetType: "fund";
   /** 基金代碼 */
   fundCode: string;
   /** 淨值日（Unix timestamp） */

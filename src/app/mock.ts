@@ -1,4 +1,4 @@
-import type { CashAccountKind, SecuritiesCashAccount, Timestamp } from "@/types";
+import type { SecuritiesCashAccount, Timestamp } from "@/types";
 
 export interface OverviewCashAccount extends SecuritiesCashAccount {
   balance: number;
@@ -30,7 +30,6 @@ export interface DashboardOverviewMock {
 function createCashAccount(
   id: string,
   brokerageAccountId: string,
-  kind: CashAccountKind,
   currency: string,
   accountName: string,
   balance: number,
@@ -40,7 +39,6 @@ function createCashAccount(
   return {
     id,
     brokerageAccountId,
-    kind,
     currency,
     accountName,
     balance,
@@ -56,46 +54,10 @@ export const dashboardOverviewMock: DashboardOverviewMock = {
   userName: "Alex",
   asOf: 1775347200,
   cashAccounts: [
-    createCashAccount(
-      "cash-1",
-      "broker-1",
-      "twd",
-      "TWD",
-      "永豐證券｜台幣交割戶",
-      248650,
-      243100,
-      5550
-    ),
-    createCashAccount(
-      "cash-2",
-      "broker-1",
-      "foreign",
-      "USD",
-      "永豐證券｜美金交割戶",
-      12680,
-      11940,
-      740
-    ),
-    createCashAccount(
-      "cash-3",
-      "broker-2",
-      "twd",
-      "TWD",
-      "富邦證券｜台幣交割戶",
-      98210,
-      96540,
-      1670
-    ),
-    createCashAccount(
-      "cash-4",
-      "broker-2",
-      "foreign",
-      "JPY",
-      "富邦證券｜日圓交割戶",
-      532000,
-      526800,
-      5200
-    ),
+    createCashAccount("cash-1", "broker-1", "TWD", "永豐證券｜台幣交割戶", 248650, 243100, 5550),
+    createCashAccount("cash-2", "broker-1", "USD", "永豐證券｜美金交割戶", 12680, 11940, 740),
+    createCashAccount("cash-3", "broker-2", "TWD", "富邦證券｜台幣交割戶", 98210, 96540, 1670),
+    createCashAccount("cash-4", "broker-2", "JPY", "富邦證券｜日圓交割戶", 532000, 526800, 5200),
   ],
   stockValues: [
     {

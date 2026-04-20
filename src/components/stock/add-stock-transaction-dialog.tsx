@@ -129,7 +129,6 @@ export function AddStockTransactionDialog({
 
     const payload: StockTransaction = {
       id: crypto.randomUUID(),
-      assetType: "stock",
       accountId: form.accountId,
       symbol: form.symbol.trim().toUpperCase(),
       market: form.market.trim() || undefined,

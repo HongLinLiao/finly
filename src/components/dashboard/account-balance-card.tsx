@@ -34,7 +34,7 @@ export function AccountBalanceCard({ account }: AccountBalanceCardProps) {
           </div>
 
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/30">
-            {account.kind === "twd" ? (
+            {account.currency === "TWD" ? (
               <Landmark className="h-4 w-4" />
             ) : (
               <Wallet className="h-4 w-4" />

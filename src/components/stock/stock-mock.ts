@@ -8,6 +8,8 @@ export const stockAccounts: BrokerageAccount[] = [
     accountName: "永豐主戶",
     baseCurrency: "TWD",
     status: "active",
+    createdAt: 1772000000,
+    updatedAt: 1775347200,
   },
   {
     id: "broker-2",
@@ -16,13 +18,14 @@ export const stockAccounts: BrokerageAccount[] = [
     accountName: "富邦海外戶",
     baseCurrency: "USD",
     status: "active",
+    createdAt: 1772000000,
+    updatedAt: 1775347200,
   },
 ];
 
 export const stockTransactions: StockTransaction[] = [
   {
     id: "tx-stock-001",
-    assetType: "stock",
     accountId: "broker-1",
     tradeDate: 1774944000,
     settleDate: 1775116800,
@@ -43,7 +46,6 @@ export const stockTransactions: StockTransaction[] = [
   },
   {
     id: "tx-stock-002",
-    assetType: "stock",
     accountId: "broker-1",
     tradeDate: 1774339200,
     settleDate: 1774512000,
@@ -64,7 +66,6 @@ export const stockTransactions: StockTransaction[] = [
   },
   {
     id: "tx-stock-003",
-    assetType: "stock",
     accountId: "broker-2",
     tradeDate: 1773734400,
     settleDate: 1773907200,
@@ -85,7 +86,6 @@ export const stockTransactions: StockTransaction[] = [
   },
   {
     id: "tx-stock-004",
-    assetType: "stock",
     accountId: "broker-2",
     tradeDate: 1773129600,
     settleDate: 1773302400,
@@ -106,7 +106,6 @@ export const stockTransactions: StockTransaction[] = [
   },
   {
     id: "tx-stock-005",
-    assetType: "stock",
     accountId: "broker-1",
     tradeDate: 1772524800,
     settleDate: 1772697600,

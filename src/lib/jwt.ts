@@ -17,10 +17,6 @@ export type JwtPayload = {
 
 const { jwtSecret } = environment;
 
-if (!jwtSecret) {
-  throw new Error("JWT_SECRET is not defined");
-}
-
 const secret = new TextEncoder().encode(jwtSecret);
 
 export async function encodeToken(data: Omit<JwtPayload, "iat" | "exp">): Promise<string> {

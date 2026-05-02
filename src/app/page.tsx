@@ -19,20 +19,20 @@ export default function Home() {
   const breadcrumbs = [{ label: "首頁", active: true }];
   const { cashAccounts, stockValues, fundValues } = dashboardOverviewMock;
 
-  const twdCashTotal = cashAccounts
+  const twd_cash_total = cashAccounts
     .filter(item => item.currency === "TWD")
     .reduce((sum, item) => sum + item.balance, 0);
 
-  const foreignCashTotal = cashAccounts
+  const foreign_cash_total = cashAccounts
     .filter(item => item.currency !== "TWD")
     .reduce((sum, item) => sum + toTwdApprox(item.balance, item.currency), 0);
 
-  const stockTotalValue = stockValues.reduce(
+  const stock_total_value = stockValues.reduce(
     (sum, item) => sum + toTwdApprox(item.marketValue, item.currency),
     0
   );
 
-  const fundTotalValue = fundValues.reduce(
+  const fund_total_value = fundValues.reduce(
     (sum, item) => sum + toTwdApprox(item.marketValue, item.currency),
     0
   );
@@ -40,10 +40,10 @@ export default function Home() {
   return (
     <Page breadcrumbs={breadcrumbs}>
       <PortfolioKpiStrip
-        twdCashTotal={twdCashTotal}
-        foreignCashTotal={foreignCashTotal}
-        stockTotalValue={stockTotalValue}
-        fundTotalValue={fundTotalValue}
+        twdCashTotal={twd_cash_total}
+        foreignCashTotal={foreign_cash_total}
+        stockTotalValue={stock_total_value}
+        fundTotalValue={fund_total_value}
       />
 
       <AccountBalanceGrid accounts={cashAccounts} />

@@ -29,7 +29,7 @@ export function AccountBalanceCard({ account }: AccountBalanceCardProps) {
         <header className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-medium text-foreground/90 dark:text-zinc-200">
-              {account.accountName}
+              {account.account_name}
             </h3>
           </div>
 

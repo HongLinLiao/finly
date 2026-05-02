@@ -1,5 +1,7 @@
 import type { SecuritiesCashAccount, Timestamp } from "@/types";
 
+const MOCK_USER_UID = "user-1";
+
 export interface OverviewCashAccount extends SecuritiesCashAccount {
   balance: number;
   available: number;
@@ -38,15 +40,16 @@ function createCashAccount(
 ): OverviewCashAccount {
   return {
     id,
-    brokerageAccountId,
+    user_uid: MOCK_USER_UID,
+    brokerage_account_id: brokerageAccountId,
     currency,
-    accountName,
+    account_name: accountName,
     balance,
     available,
     pending,
     status: "active",
-    createdAt: 1743091200,
-    updatedAt: 1775347200,
+    created_at: 1743091200,
+    updated_at: 1775347200,
   };
 }
 

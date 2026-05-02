@@ -54,3 +54,5 @@ next-env.d.ts
 !.github/prompts/
 !.github/prompts/**/
 !.github/prompts/**/*.md
+# Sentry Config File
+.env.sentry-build-plugin

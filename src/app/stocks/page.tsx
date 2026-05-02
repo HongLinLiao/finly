@@ -27,17 +27,17 @@ const Stocks = () => {
   const filteredTransactions = useMemo(
     () =>
       stockTransactions
-        .filter(item => accountFilter === "all" || item.accountId === accountFilter)
+        .filter(item => accountFilter === "all" || item.account_id === accountFilter)
         .filter(item => sideFilter === "all" || item.side === sideFilter)
         .filter(item => symbolFilter === "all" || item.symbol === symbolFilter)
-        .sort((a, b) => b.tradeDate - a.tradeDate),
+        .sort((a, b) => b.trade_date - a.trade_date),
     [accountFilter, sideFilter, symbolFilter]
   );
 
   const summary = useMemo(() => {
     const buyCount = filteredTransactions.filter(item => item.side === "buy").length;
     const sellCount = filteredTransactions.filter(item => item.side === "sell").length;
-    const totalNet = filteredTransactions.reduce((sum, item) => sum + item.netAmount, 0);
+    const totalNet = filteredTransactions.reduce((sum, item) => sum + item.net_amount, 0);
     const currency = filteredTransactions[0]?.currency ?? "TWD";
 
     return { buyCount, sellCount, totalNet, currency };

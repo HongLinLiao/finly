@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 
+import { AuthProvider } from "@/components/provider/auth-provider";
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 import { cn } from "@/lib/utils";
@@ -69,17 +70,19 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <RegisterServiceWorker />
-          <SpeedInsights />
-          <Analytics />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <RegisterServiceWorker />
+            <SpeedInsights />
+            <Analytics />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

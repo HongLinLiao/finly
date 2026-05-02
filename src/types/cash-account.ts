@@ -39,31 +39,35 @@ export type CashMovementMethod =
 export interface SecuritiesCashAccount {
   /** 資金帳戶唯一識別碼 */
   id: string;
+  /** 所屬使用者 UID（對應 User.uid） */
+  user_uid: string;
   /** 所屬證券戶識別碼（對應 BrokerageAccount.id） */
-  brokerageAccountId: string;
+  brokerage_account_id: string;
   /** 幣別，例如 TWD、USD、JPY */
   currency: CurrencyCode;
   /** 帳戶顯示名稱，例如「元大台幣交割戶」 */
-  accountName?: string;
+  account_name?: string;
   /** 帳戶狀態 */
   status: AccountStatus;
   /** 建立時間（Unix timestamp） */
-  createdAt: Timestamp;
+  created_at: Timestamp;
   /** 更新時間（Unix timestamp） */
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface CashAccountMovement {
   /** 異動唯一識別碼 */
   id: string;
+  /** 所屬使用者 UID（對應 User.uid） */
+  user_uid: string;
   /** 所屬證券戶識別碼（對應 BrokerageAccount.id） */
-  brokerageAccountId: string;
+  brokerage_account_id: string;
   /** 所屬資金帳戶識別碼（對應 SecuritiesCashAccount.id） */
-  cashAccountId: string;
+  cash_account_id: string;
   /** 異動時間（Unix timestamp） */
-  occurredAt: Timestamp;
+  occurred_at: Timestamp;
   /** 交割時間（Unix timestamp） */
-  settleAt?: Timestamp;
+  settle_at?: Timestamp;
   /** 異動方向 */
   direction: CashMovementDirection;
   /** 異動方式 */
@@ -73,25 +77,25 @@ export interface CashAccountMovement {
   /** 幣別，例如 TWD、USD */
   currency: CurrencyCode;
   /** 異動後餘額（可選，若有對帳需求可紀錄） */
-  balanceAfter?: number;
+  balance_after?: number;
   /** 關聯資產類型（股票或基金） */
-  relatedAssetType?: AssetKind;
+  related_asset_type?: AssetKind;
   /** 關聯股票交易 ID（對應 StockTransaction.id） */
-  stockTransactionId?: string;
+  stock_transaction_id?: string;
   /** 關聯基金交易 ID（對應 FundTransaction.id） */
-  fundTransactionId?: string;
+  fund_transaction_id?: string;
   /** 關聯標的代號（股票 symbol 或基金 fundCode） */
-  relatedAssetCode?: string;
+  related_asset_code?: string;
   /** 備註 */
   note?: string;
   /** 建立時間（Unix timestamp） */
-  createdAt: Timestamp;
+  created_at: Timestamp;
   /** 更新時間（Unix timestamp） */
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 /** 資金帳戶與異動明細 */
 export interface CashAccountLedger {
-  cashAccount: SecuritiesCashAccount;
+  cash_account: SecuritiesCashAccount;
   movements: CashAccountMovement[];
 }

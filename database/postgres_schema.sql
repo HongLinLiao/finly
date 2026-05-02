@@ -31,6 +31,7 @@ CREATE TYPE cash_movement_method AS ENUM (
   'interest',
   'fx-exchange'
 );
+CREATE TYPE auth_provider AS ENUM ('LINE');
 
 -- ------------------
 -- Common timestamp trigger
@@ -52,8 +53,28 @@ COMMENT ON FUNCTION set_updated_at() IS '統一更新各資料表的 updated_at 
 -- Core account tables
 -- ------------------
 
+CREATE TABLE users (
+  uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(320),
+  avatar_url TEXT,
+  provider auth_provider NOT NULL DEFAULT 'LINE',
+  provider_user_id VARCHAR(255),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE users IS '登入使用者主檔';
+COMMENT ON COLUMN users.uid IS '使用者唯一識別碼（UUID）';
+COMMENT ON COLUMN users.username IS '使用者名稱（必填）';
+COMMENT ON COLUMN users.email IS '使用者 Email（可空）';
+COMMENT ON COLUMN users.avatar_url IS '使用者頭像連結（可空）';
+COMMENT ON COLUMN users.provider IS '登入供應商，目前支援 LINE';
+COMMENT ON COLUMN users.provider_user_id IS '第三方登入供應商的使用者識別碼（可空）';
+COMMENT ON COLUMN users.created_at IS '建立時間';
+
 CREATE TABLE brokerage_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   broker_name VARCHAR(100) NOT NULL,
   account_no VARCHAR(64),
   account_name VARCHAR(100) NOT NULL,
@@ -69,6 +90,7 @@ CREATE TABLE brokerage_accounts (
 
 COMMENT ON TABLE brokerage_accounts IS '證券戶主檔';
 COMMENT ON COLUMN brokerage_accounts.id IS '證券戶唯一識別碼';
+COMMENT ON COLUMN brokerage_accounts.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN brokerage_accounts.broker_name IS '證券商名稱，例如永豐、富邦';
 COMMENT ON COLUMN brokerage_accounts.account_no IS '證券戶號碼，可存遮罩或原始值（非必填）';
 COMMENT ON COLUMN brokerage_accounts.account_name IS '使用者自訂顯示名稱（必填）';
@@ -84,6 +106,7 @@ EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE securities_cash_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   brokerage_account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   currency VARCHAR(3) NOT NULL CHECK (currency ~ '^[A-Z]{3}$'),
   account_name VARCHAR(100),
@@ -95,6 +118,7 @@ CREATE TABLE securities_cash_accounts (
 
 COMMENT ON TABLE securities_cash_accounts IS '證券戶下的資金帳戶';
 COMMENT ON COLUMN securities_cash_accounts.id IS '資金帳戶唯一識別碼';
+COMMENT ON COLUMN securities_cash_accounts.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN securities_cash_accounts.brokerage_account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN securities_cash_accounts.currency IS '資金幣別（ISO 4217）';
 COMMENT ON COLUMN securities_cash_accounts.account_name IS '帳戶顯示名稱';
@@ -113,6 +137,7 @@ EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE stock_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   trade_date TIMESTAMPTZ NOT NULL,
   settle_date TIMESTAMPTZ,
@@ -134,6 +159,7 @@ CREATE TABLE stock_transactions (
 
 COMMENT ON TABLE stock_transactions IS '股票交易主表（對應 StockTransaction）';
 COMMENT ON COLUMN stock_transactions.id IS '交易唯一識別碼';
+COMMENT ON COLUMN stock_transactions.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN stock_transactions.account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN stock_transactions.trade_date IS '交易時間';
 COMMENT ON COLUMN stock_transactions.settle_date IS '交割時間';
@@ -159,6 +185,7 @@ EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE fund_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   trade_date TIMESTAMPTZ NOT NULL,
   settle_date TIMESTAMPTZ,
@@ -181,6 +208,7 @@ CREATE TABLE fund_transactions (
 
 COMMENT ON TABLE fund_transactions IS '基金交易主表（對應 FundTransaction）';
 COMMENT ON COLUMN fund_transactions.id IS '交易唯一識別碼';
+COMMENT ON COLUMN fund_transactions.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN fund_transactions.account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN fund_transactions.trade_date IS '交易時間';
 COMMENT ON COLUMN fund_transactions.settle_date IS '交割時間';
@@ -211,6 +239,7 @@ EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE cash_account_movements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   brokerage_account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   cash_account_id UUID NOT NULL REFERENCES securities_cash_accounts(id) ON DELETE CASCADE,
   occurred_at TIMESTAMPTZ NOT NULL,
@@ -237,6 +266,7 @@ CREATE TABLE cash_account_movements (
 
 COMMENT ON TABLE cash_account_movements IS '資金異動流水帳（對應 CashAccountMovement）';
 COMMENT ON COLUMN cash_account_movements.id IS '資金異動唯一識別碼';
+COMMENT ON COLUMN cash_account_movements.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN cash_account_movements.brokerage_account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN cash_account_movements.cash_account_id IS '所屬資金帳戶 ID';
 COMMENT ON COLUMN cash_account_movements.occurred_at IS '異動發生時間';
@@ -265,19 +295,36 @@ EXECUTE FUNCTION set_updated_at();
 -- ----------
 
 -- Accounts and cash accounts
-CREATE UNIQUE INDEX uq_brokerage_accounts_broker_account_no_not_null
-  ON brokerage_accounts (broker_name, account_no)
+CREATE UNIQUE INDEX uq_brokerage_accounts_user_broker_account_no_not_null
+  ON brokerage_accounts (user_uid, broker_name, account_no)
   WHERE account_no IS NOT NULL;
-COMMENT ON INDEX uq_brokerage_accounts_broker_account_no_not_null IS '僅在戶號有值時，限制同券商下戶號不可重複';
+COMMENT ON INDEX uq_brokerage_accounts_user_broker_account_no_not_null IS '僅在戶號有值時，限制同使用者同券商下戶號不可重複';
+
+ALTER TABLE users
+  ADD CONSTRAINT users_provider_provider_user_id_key
+  UNIQUE (provider, provider_user_id);
+COMMENT ON CONSTRAINT users_provider_provider_user_id_key ON users IS '限制同登入供應商下的 provider_user_id 不可重複';
+
+CREATE INDEX idx_brokerage_accounts_user_uid
+  ON brokerage_accounts (user_uid);
+COMMENT ON INDEX idx_brokerage_accounts_user_uid IS '加速依使用者查詢證券戶';
 
 CREATE INDEX idx_cash_accounts_brokerage_account_id
   ON securities_cash_accounts (brokerage_account_id);
 COMMENT ON INDEX idx_cash_accounts_brokerage_account_id IS '加速依證券戶查詢資金帳戶';
 
+CREATE INDEX idx_cash_accounts_user_uid
+  ON securities_cash_accounts (user_uid);
+COMMENT ON INDEX idx_cash_accounts_user_uid IS '加速依使用者查詢資金帳戶';
+
 -- Transaction query patterns (current UI: by account / symbol / side / trade date)
 CREATE INDEX idx_stock_transactions_account_trade_date
   ON stock_transactions (account_id, trade_date DESC);
 COMMENT ON INDEX idx_stock_transactions_account_trade_date IS '加速依帳戶查股票交易並按交易日排序';
+
+CREATE INDEX idx_stock_transactions_user_trade_date
+  ON stock_transactions (user_uid, trade_date DESC);
+COMMENT ON INDEX idx_stock_transactions_user_trade_date IS '加速依使用者查股票交易並按交易日排序';
 
 CREATE INDEX idx_stock_transactions_side_trade_date
   ON stock_transactions (side, trade_date DESC);
@@ -290,6 +337,10 @@ COMMENT ON INDEX idx_stock_transactions_symbol_trade_date IS '加速股票代號
 CREATE INDEX idx_fund_transactions_account_trade_date
   ON fund_transactions (account_id, trade_date DESC);
 COMMENT ON INDEX idx_fund_transactions_account_trade_date IS '加速依帳戶查基金交易並按交易日排序';
+
+CREATE INDEX idx_fund_transactions_user_trade_date
+  ON fund_transactions (user_uid, trade_date DESC);
+COMMENT ON INDEX idx_fund_transactions_user_trade_date IS '加速依使用者查基金交易並按交易日排序';
 
 CREATE INDEX idx_fund_transactions_side_trade_date
   ON fund_transactions (side, trade_date DESC);
@@ -307,6 +358,10 @@ COMMENT ON INDEX idx_cash_movements_cash_account_occurred_at IS '加速依資金
 CREATE INDEX idx_cash_movements_brokerage_occurred_at
   ON cash_account_movements (brokerage_account_id, occurred_at DESC);
 COMMENT ON INDEX idx_cash_movements_brokerage_occurred_at IS '加速依證券戶查詢資金異動';
+
+CREATE INDEX idx_cash_movements_user_occurred_at
+  ON cash_account_movements (user_uid, occurred_at DESC);
+COMMENT ON INDEX idx_cash_movements_user_occurred_at IS '加速依使用者查詢資金異動';
 
 CREATE INDEX idx_cash_movements_stock_transaction_id
   ON cash_account_movements (stock_transaction_id)

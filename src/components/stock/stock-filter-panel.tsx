@@ -73,7 +73,7 @@ export function StockFilterPanel({
                 <SelectItem value="all">全部帳戶</SelectItem>
                 {accounts.map(account => (
                   <SelectItem key={account.id} value={account.id}>
-                    {account.accountName ?? account.brokerName}
+                    {account.account_name ?? account.broker_name}
                   </SelectItem>
                 ))}
               </SelectContent>

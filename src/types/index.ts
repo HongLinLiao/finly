@@ -4,3 +4,5 @@ export * from "./stock";
 export * from "./fund";
 export * from "./transaction";
 export * from "./cash-account";
+export * from "./user";
+export * from "./line";

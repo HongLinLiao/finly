@@ -94,7 +94,7 @@ export function AddStockTransactionDialog({
   const accountOptions = useMemo(() => {
     return accounts.map(account => ({
       id: account.id,
-      name: account.accountName ?? account.brokerName,
+      name: account.account_name ?? account.broker_name,
     }));
   }, [accounts]);
 
@@ -126,27 +126,31 @@ export function AddStockTransactionDialog({
     if (!form.accountId) {
       return;
     }
+    const selectedAccount = accounts.find(account => account.id === form.accountId);
+    if (!selectedAccount) {
+      return;
+    }
 
     const payload: StockTransaction = {
       id: crypto.randomUUID(),
-      assetType: "stock",
-      accountId: form.accountId,
+      user_uid: selectedAccount.user_uid,
+      account_id: form.accountId,
       symbol: form.symbol.trim().toUpperCase(),
       market: form.market.trim() || undefined,
-      boardLotType: form.boardLotType,
+      board_lot_type: form.boardLotType,
       side: form.side,
-      tradeDate: toUnixTimestamp(form.tradeDate),
-      settleDate: form.settleDate ? toUnixTimestamp(form.settleDate) : undefined,
+      trade_date: toUnixTimestamp(form.tradeDate),
+      settle_date: form.settleDate ? toUnixTimestamp(form.settleDate) : undefined,
       quantity,
-      unitPrice,
-      grossAmount,
+      unit_price: unitPrice,
+      gross_amount: grossAmount,
       fee: form.fee ? fee : undefined,
       tax: form.tax ? tax : undefined,
-      netAmount,
+      net_amount: netAmount,
       currency: form.currency,
       note: form.note.trim() || undefined,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
+      created_at: Math.floor(Date.now() / 1000),
+      updated_at: Math.floor(Date.now() / 1000),
     };
 
     console.info("新增股票交易明細（StockTransaction）", payload);

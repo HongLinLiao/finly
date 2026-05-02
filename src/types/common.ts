@@ -23,3 +23,6 @@ export type AccountStatus =
 
 /** Unix timestamp（number） */
 export type Timestamp = number;
+
+/** ISO 4217 三碼幣別（格式由後端/DB 驗證） */
+export type CurrencyCode = string;

@@ -23,7 +23,7 @@ interface StockTransactionItemProps {
 }
 
 export function StockTransactionItem({ item, open, onOpenChange }: StockTransactionItemProps) {
-  const account = stockAccounts.find(accountItem => accountItem.id === item.accountId);
+  const account = stockAccounts.find(accountItem => accountItem.id === item.account_id);
   const sideIsBuy = item.side === "buy";
 
   return (
@@ -67,7 +67,7 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
 
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
-                      {boardLotLabels[item.boardLotType ?? "regular"]}
+                      {boardLotLabels[item.board_lot_type ?? "regular"]}
                     </span>
                     {item.market ? (
                       <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
@@ -77,8 +77,8 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
                   </div>
 
                   <p className="truncate text-xs text-muted-foreground dark:text-zinc-400 sm:whitespace-normal">
-                    {account?.accountName ?? account?.brokerName ?? "未知帳戶"} ·{" "}
-                    {formatDateTime(item.tradeDate)}
+                    {account?.account_name ?? account?.broker_name ?? "未知帳戶"} ·{" "}
+                    {formatDateTime(item.trade_date)}
                   </p>
                 </div>
               </div>
@@ -86,10 +86,10 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
               <div className="flex items-end justify-between gap-3 pl-12">
                 <p className="text-xs text-muted-foreground dark:text-zinc-400">
                   {formatNumber(item.quantity)} 股 · 單價{" "}
-                  {formatCurrency(item.unitPrice, item.currency)}
+                  {formatCurrency(item.unit_price, item.currency)}
                 </p>
                 <p className="shrink-0 text-right text-base font-semibold text-foreground dark:text-zinc-100 sm:text-sm">
-                  {formatCurrency(item.netAmount, item.currency)}
+                  {formatCurrency(item.net_amount, item.currency)}
                 </p>
               </div>
             </button>
@@ -102,21 +102,21 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
               <DetailField label="市場" value={item.market ?? "—"} />
               <DetailField
                 label="交割日"
-                value={item.settleDate ? formatDateTime(item.settleDate) : "—"}
+                value={item.settle_date ? formatDateTime(item.settle_date) : "—"}
               />
               <DetailField
                 label="成交金額"
-                value={formatCurrency(item.grossAmount, item.currency)}
+                value={formatCurrency(item.gross_amount, item.currency)}
               />
               <DetailField label="手續費" value={formatCurrency(item.fee ?? 0, item.currency)} />
               <DetailField label="稅額" value={formatCurrency(item.tax ?? 0, item.currency)} />
               <DetailField
                 label="建立時間"
-                value={item.createdAt ? formatDateTime(item.createdAt) : "—"}
+                value={item.created_at ? formatDateTime(item.created_at) : "—"}
               />
               <DetailField
                 label="更新時間"
-                value={item.updatedAt ? formatDateTime(item.updatedAt) : "—"}
+                value={item.updated_at ? formatDateTime(item.updated_at) : "—"}
               />
               <DetailField label="備註" value={item.note ?? "—"} />
             </div>

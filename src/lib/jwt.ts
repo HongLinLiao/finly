@@ -31,7 +31,7 @@ export async function decodeToken(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret);
     return payload as JwtPayload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

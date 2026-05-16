@@ -18,7 +18,10 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.includes(currentPath);
 
   if (!jwt && !isPublicPath) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("returnTo", `${currentPath}${request.nextUrl.search}`);
+
+    return NextResponse.redirect(loginUrl);
   }
 
   if (jwt) {

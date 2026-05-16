@@ -72,6 +72,27 @@ COMMENT ON COLUMN users.provider IS '登入供應商，目前支援 LINE';
 COMMENT ON COLUMN users.provider_user_id IS '第三方登入供應商的使用者識別碼（可空）';
 COMMENT ON COLUMN users.created_at IS '建立時間';
 
+CREATE TABLE auth_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_hash CHAR(64) NOT NULL UNIQUE,
+  user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+  target_origin TEXT NOT NULL,
+  return_to TEXT NOT NULL DEFAULT '/',
+  expires_at TIMESTAMPTZ NOT NULL,
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE auth_tickets IS '跨 preview 網域登入 handoff 的短效一次性票券';
+COMMENT ON COLUMN auth_tickets.id IS '票券資料列唯一識別碼';
+COMMENT ON COLUMN auth_tickets.ticket_hash IS '一次性 raw ticket 的 SHA-256 hash';
+COMMENT ON COLUMN auth_tickets.user_uid IS '票券對應的登入使用者 UID';
+COMMENT ON COLUMN auth_tickets.target_origin IS '允許消費票券的目標 origin';
+COMMENT ON COLUMN auth_tickets.return_to IS '票券消費成功後導回的站內路徑';
+COMMENT ON COLUMN auth_tickets.expires_at IS '票券過期時間';
+COMMENT ON COLUMN auth_tickets.consumed_at IS '票券消費時間，空值代表尚未使用';
+COMMENT ON COLUMN auth_tickets.created_at IS '建立時間';
+
 CREATE TABLE brokerage_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
@@ -304,6 +325,14 @@ ALTER TABLE users
   ADD CONSTRAINT users_provider_provider_user_id_key
   UNIQUE (provider, provider_user_id);
 COMMENT ON CONSTRAINT users_provider_provider_user_id_key ON users IS '限制同登入供應商下的 provider_user_id 不可重複';
+
+CREATE INDEX idx_auth_tickets_expires_at
+  ON auth_tickets (expires_at);
+COMMENT ON INDEX idx_auth_tickets_expires_at IS '加速清理過期 auth handoff 票券';
+
+CREATE INDEX idx_auth_tickets_user_uid
+  ON auth_tickets (user_uid);
+COMMENT ON INDEX idx_auth_tickets_user_uid IS '加速依使用者查詢 auth handoff 票券';
 
 CREATE INDEX idx_brokerage_accounts_user_uid
   ON brokerage_accounts (user_uid);

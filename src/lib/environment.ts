@@ -8,6 +8,7 @@ interface Environment {
   lineLoginChannelId: string;
   lineLoginChannelSecret: string;
   lineRedirectUri: string;
+  authHandoffVercelProjectName: string;
 }
 
 export const environment: Environment = {
@@ -20,4 +21,5 @@ export const environment: Environment = {
   lineLoginChannelId: process.env.LINE_LOGIN_CHANNEL_ID || "",
   lineLoginChannelSecret: process.env.LINE_LOGIN_CHANNEL_SECRET || "",
   lineRedirectUri: process.env.LINE_REDIRECT_URI || "",
+  authHandoffVercelProjectName: process.env.AUTH_HANDOFF_VERCEL_PROJECT_NAME || "",
 };

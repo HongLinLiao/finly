@@ -1,16 +1,14 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { CookieKey } from "@/lib/cookie";
-import { environment } from "@/lib/environment";
-import { encodeToken } from "@/lib/jwt";
+import { verifyLineAuthState } from "@/lib/auth/handoff";
+import { CookieKey, createSessionJwt, getSessionCookieOptions } from "@/lib/auth/session";
 import { parseIdTokenPayload } from "@/lib/line";
+import { createAuthTicket } from "@/lib/supabase/auth-ticket/createAuthTicket";
 import upsertUser from "@/lib/supabase/user/upsertUser";
 import getProfile from "@/services/line/getProfile.server";
 import getToken from "@/services/line/getToken.server";
 import { User } from "@/types";
-
-const { env } = environment;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,6 +17,12 @@ export async function GET(request: NextRequest) {
 
   if (!code || !state) {
     return new NextResponse("Invalid callback URL", { status: 400 });
+  }
+
+  const authState = await verifyLineAuthState(state);
+
+  if (!authState) {
+    return new NextResponse("Invalid auth state", { status: 400 });
   }
 
   const tokenResponse = await getToken(code);
@@ -61,23 +65,26 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Failed to sync user", { status: 500 });
   }
 
-  const jwt = await encodeToken({
-    sub: user.uid,
-    uid: user.uid,
-    username: user.username,
-    email: user.email,
-    avatar_url: user.avatar_url,
-    provider: user.provider,
-  });
+  if (authState.mode === "handoff" && authState.targetOrigin) {
+    try {
+      const ticket = await createAuthTicket({
+        userUid: user.uid,
+        targetOrigin: authState.targetOrigin,
+        returnTo: authState.returnTo,
+      });
+      const consumeUrl = new URL("/api/auth/consume", authState.targetOrigin);
+      consumeUrl.searchParams.set("ticket", ticket);
 
+      return NextResponse.redirect(consumeUrl);
+    } catch (error) {
+      console.error("Failed to create auth handoff ticket:", error);
+      return new NextResponse("Failed to create auth handoff ticket", { status: 500 });
+    }
+  }
+
+  const jwt = await createSessionJwt(user);
   const cookieStore = await cookies();
-  cookieStore.set(CookieKey.JWT, jwt, {
-    secure: env === "production",
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  cookieStore.set(CookieKey.JWT, jwt, getSessionCookieOptions());
 
-  return NextResponse.redirect(new URL("/", request.url));
+  return NextResponse.redirect(new URL(authState.returnTo, request.url));
 }

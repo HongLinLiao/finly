@@ -44,7 +44,7 @@ const MainLayout = ({ children, isShowHeader = true }: PageProps) => {
         >
           {children}
         </main>
-        <Footer />
+        {isMobile && <Footer />}
       </SidebarInset>
     </SidebarProvider>
   );

@@ -1,20 +1,30 @@
 "use client";
 
-import { ChartCandlestick, HandCoins, House } from "lucide-react";
+import {
+  ChartCandlestick,
+  ChevronRight,
+  HandCoins,
+  House,
+  Settings,
+  Building2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +36,18 @@ const DESKTOP_MENU = [
   { title: "首頁", icon: House, href: "/" },
   { title: "基金", icon: HandCoins, href: "/funds" },
   { title: "股票", icon: ChartCandlestick, href: "/stocks" },
+  {
+    title: "設定",
+    icon: Settings,
+    items: [{ title: "證券戶設定", href: "/brokerages", icon: Building2 }],
+  },
 ] as const;
 
 const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
   const pathname = usePathname();
+
+  const isActiveHref = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Sidebar className={cn("group-data-[side=left]:border-r-0", className)} collapsible="offcanvas">
@@ -62,24 +80,63 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
           </SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {DESKTOP_MENU.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname === item.href || pathname?.startsWith(`${item.href}/`)
-                    }
-                    className="h-10 rounded-xl"
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {DESKTOP_MENU.map(item => {
+                if ("items" in item) {
+                  const isActive = item.items.some(child => isActiveHref(child.href));
+
+                  return (
+                    <Collapsible
+                      key={item.title}
+                      asChild
+                      defaultOpen={isActive}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton isActive={isActive} className="h-10 rounded-xl">
+                            <item.icon />
+                            <span>{item.title}</span>
+                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items.map(child => (
+                              <SidebarMenuSubItem key={child.href}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActiveHref(child.href)}
+                                  className="h-8"
+                                >
+                                  <Link href={child.href}>
+                                    <child.icon />
+                                    <span>{child.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActiveHref(item.href)}
+                      className="h-10 rounded-xl"
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

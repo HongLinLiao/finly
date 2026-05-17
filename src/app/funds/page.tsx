@@ -3,11 +3,11 @@
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { AddFundPositionDialog } from "@/components/fund/add-fund-position-dialog";
+import { AddFundTransactionDialog } from "@/components/fund/add-fund-transaction-dialog";
 import { FundEmptyState } from "@/components/fund/fund-empty-state";
 import { FundFilterPanel, type FundSortBy } from "@/components/fund/fund-filter-panel";
 import { FundHeader } from "@/components/fund/fund-header";
-import { fundPositionsMock } from "@/components/fund/fund-mock";
+import { fundAccounts, fundPositionsMock } from "@/components/fund/fund-mock";
 import { FundPositionCard } from "@/components/fund/fund-position-card";
 import { FundSummaryStrip } from "@/components/fund/fund-summary-strip";
 import { Button } from "@/components/ui/button";
@@ -113,13 +113,17 @@ const FundsPage = () => {
         <Button
           size="icon-lg"
           className="fixed right-4 z-40 bottom-[calc(env(safe-area-inset-bottom)+98px)] rounded-full shadow-lg ring-1 ring-emerald-500/45 md:right-6 md:bottom-6"
-          aria-label="新增基金持倉"
+          aria-label="新增基金交易明細"
           onClick={() => setIsAddDialogOpen(true)}
         >
           <Plus />
         </Button>
 
-        <AddFundPositionDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+        <AddFundTransactionDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          accounts={fundAccounts}
+        />
       </section>
     </Page>
   );

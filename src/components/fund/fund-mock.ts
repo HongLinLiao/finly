@@ -1,5 +1,7 @@
 import type { FundPosition } from "./fund-list-data";
 
+export { stockAccounts as fundAccounts } from "@/components/stock/stock-mock";
+
 export const fundPositionsMock: FundPosition[] = [
   {
     id: "fund-001",

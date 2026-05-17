@@ -14,7 +14,16 @@ CREATE TYPE trade_side AS ENUM ('buy', 'sell');
 CREATE TYPE account_status AS ENUM ('active', 'inactive', 'closed');
 CREATE TYPE board_lot_type AS ENUM ('odd', 'regular');
 CREATE TYPE fund_transaction_type AS ENUM ('subscribe', 'redeem', 'switch-in', 'switch-out');
-CREATE TYPE dividend_mode AS ENUM ('cash', 'reinvest');
+CREATE TYPE dividend_mode AS ENUM (
+  'accumulation',
+  'cash',
+  'cash-monthly',
+  'cash-quarterly',
+  'cash-semiannual',
+  'cash-annual',
+  'cash-irregular',
+  'reinvest'
+);
 CREATE TYPE cash_movement_direction AS ENUM ('in', 'out');
 CREATE TYPE cash_movement_method AS ENUM (
   'transfer-in',
@@ -237,7 +246,7 @@ COMMENT ON COLUMN fund_transactions.side IS '交易方向：buy/sell';
 COMMENT ON COLUMN fund_transactions.fund_code IS '基金代碼';
 COMMENT ON COLUMN fund_transactions.nav_date IS '基金淨值日';
 COMMENT ON COLUMN fund_transactions.transaction_type IS '基金交易類型：subscribe/redeem/switch-in/switch-out';
-COMMENT ON COLUMN fund_transactions.dividend_mode IS '基金配息方式：cash/reinvest';
+COMMENT ON COLUMN fund_transactions.dividend_mode IS '基金配息方式：accumulation/cash/cash-monthly/cash-quarterly/cash-semiannual/cash-annual/cash-irregular/reinvest';
 COMMENT ON COLUMN fund_transactions.quantity IS '交易數量（基金單位數）';
 COMMENT ON COLUMN fund_transactions.unit_price IS '每單位價格';
 COMMENT ON COLUMN fund_transactions.gross_amount IS '原始成交金額（未扣費用/稅）';

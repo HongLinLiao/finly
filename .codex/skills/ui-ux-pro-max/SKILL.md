@@ -173,6 +173,13 @@ Examples:
 
 ## shadcn Implementation Rules (Must Follow)
 
+### Error Disclosure
+
+1. Never display raw server-side error messages directly in the frontend.
+2. Server actions and API handlers must log unexpected server errors on the server and return a generic, user-safe message to UI components.
+3. Frontend error copy may be specific for user-correctable validation errors, such as missing required fields or invalid input format.
+4. Do not pass database, Supabase, stack trace, environment, auth token, SQL, or internal exception text into visible UI state.
+
 ### Setup & Installation
 
 1. Use CLI, not manual copy:

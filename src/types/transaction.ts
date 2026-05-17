@@ -54,7 +54,7 @@ export interface FundTransaction extends BaseTransaction {
   nav_date?: Timestamp;
   /** 申購 / 贖回 / 轉入 / 轉出 */
   transaction_type?: FundTransactionType;
-  /** 配息方式：領現金或再投入 */
+  /** 配息方式：累積型、現金配息頻率或配息再投入 */
   dividend_mode?: DividendMode;
 }
 

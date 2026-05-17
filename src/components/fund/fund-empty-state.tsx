@@ -1,12 +1,6 @@
 import { HandCoins } from "lucide-react";
 
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 export const FundEmptyState = () => {
   return (
@@ -16,7 +10,6 @@ export const FundEmptyState = () => {
           <HandCoins />
         </EmptyMedia>
         <EmptyTitle>找不到符合條件的基金</EmptyTitle>
-        <EmptyDescription>調整篩選條件，或清空關鍵字後再試一次。</EmptyDescription>
       </EmptyHeader>
     </Empty>
   );

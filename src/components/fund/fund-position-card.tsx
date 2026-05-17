@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { getDividendModeLabel } from "@/types/fund";
 
 import { formatCurrency, formatPercent } from "./fund-format";
 
@@ -21,7 +22,7 @@ export const FundPositionCard = ({ item, open, onOpenChange }: FundPositionCardP
   const pnlColor = unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
     item.return1y >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
-  const dividendLabel = item.dividendMode === "cash" ? "現金配息" : "配息再投入";
+  const dividendLabel = getDividendModeLabel(item.dividendMode);
 
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>

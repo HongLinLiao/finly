@@ -1,5 +1,7 @@
 import type { FundPosition } from "./fund-list-data";
 
+export { stockAccounts as fundAccounts } from "@/components/stock/stock-mock";
+
 export const fundPositionsMock: FundPosition[] = [
   {
     id: "fund-001",
@@ -7,7 +9,7 @@ export const fundPositionsMock: FundPosition[] = [
     symbol: "ALTW-A",
     fundHouse: "安聯投信",
     risk: "RR4",
-    dividendMode: "reinvest",
+    dividendMode: "accumulation",
     currency: "TWD",
     costAmount: 320000,
     marketValue: 362500,
@@ -33,7 +35,7 @@ export const fundPositionsMock: FundPosition[] = [
     symbol: "BLK-ENG",
     fundHouse: "貝萊德",
     risk: "RR5",
-    dividendMode: "reinvest",
+    dividendMode: "accumulation",
     currency: "USD",
     costAmount: 12500,
     marketValue: 11780,
@@ -46,7 +48,7 @@ export const fundPositionsMock: FundPosition[] = [
     symbol: "CT-ESG",
     fundHouse: "國泰投信",
     risk: "RR3",
-    dividendMode: "reinvest",
+    dividendMode: "accumulation",
     currency: "TWD",
     costAmount: 210000,
     marketValue: 224200,

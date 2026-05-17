@@ -1,9 +1,17 @@
 "use client";
 
-import { HandCoins } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Check, ChevronsUpDown, HandCoins } from "lucide-react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -12,87 +20,367 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { RequiredMark } from "@/components/util/form/required-mark";
+import { cn } from "@/lib/utils";
+import {
+  createFundTransaction,
+  type CreateFundTransactionState,
+} from "@/services/fund/createFundTransaction";
+import { DIVIDEND_MODE_OPTIONS } from "@/types/fund";
 
-import type {
-  BrokerageAccount,
-  DividendMode,
-  FundTransaction,
-  FundTransactionType,
-  TradeSide,
-} from "@/types";
-import type { FormEvent } from "react";
+import { Separator } from "../ui/separator";
+
+import type { TaiwanFundOption } from "@/lib/cnyes-fund";
+import type { BrokerageAccountWithCashAccounts } from "@/services/brokerage/getBrokerageAccounts";
+import type { FundTransactionType, TradeSide } from "@/types";
 
 interface AddFundTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  accounts: BrokerageAccount[];
+  accounts: BrokerageAccountWithCashAccounts[];
+  funds: TaiwanFundOption[];
 }
 
-type FormState = {
-  accountId: string;
-  fundCode: string;
-  side: TradeSide;
-  tradeDate: string;
-  settleDate: string;
-  navDate: string;
-  transactionType: FundTransactionType;
-  dividendMode: DividendMode;
-  quantity: string;
-  unitPrice: string;
-  grossAmount: string;
-  fee: string;
-  tax: string;
-  netAmount: string;
-  currency: string;
-  note: string;
+const initialState: CreateFundTransactionState = {
+  success: false,
+  message: "",
 };
 
-const DEFAULT_FORM: FormState = {
-  accountId: "",
-  fundCode: "",
-  side: "buy",
-  tradeDate: "",
-  settleDate: "",
-  navDate: "",
-  transactionType: "subscribe",
-  dividendMode: "reinvest",
-  quantity: "",
-  unitPrice: "",
-  grossAmount: "",
-  fee: "",
-  tax: "",
-  netAmount: "",
-  currency: "TWD",
-  note: "",
-};
+function toDateInputValue(value: string) {
+  if (!/^\d{8}$/.test(value)) return "";
 
-function toUnixTimestamp(dateString: string) {
-  return Math.floor(new Date(`${dateString}T00:00:00`).getTime() / 1000);
+  return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
 }
 
-function toNumber(value: string) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function calculateNetAmount(side: TradeSide, grossAmount: number, fee: number, tax: number) {
-  return side === "sell" ? grossAmount - fee - tax : grossAmount + fee + tax;
-}
-
-function RequiredMark() {
+function FundOptionContent({ fund }: { fund: TaiwanFundOption }) {
   return (
-    <span aria-hidden="true" className="ml-1 text-red-500">
-      *
-    </span>
+    <>
+      <span className="min-w-16 font-medium text-foreground">{fund.fundCode}</span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-foreground">{fund.fundName}</span>
+        <span className="truncate text-xs font-normal text-muted-foreground">
+          {fund.companyName} · {fund.currency}
+        </span>
+      </span>
+    </>
+  );
+}
+
+function AddFundTransactionForm({
+  accounts,
+  funds,
+  onSuccess,
+}: {
+  accounts: BrokerageAccountWithCashAccounts[];
+  funds: TaiwanFundOption[];
+  onSuccess: () => void;
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction, isPending] = useActionState(createFundTransaction, initialState);
+  const [selectedCashAccountId, setSelectedCashAccountId] = useState("");
+  const [selectedFundCode, setSelectedFundCode] = useState("");
+  const [isFundSearchOpen, setIsFundSearchOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState<FundTransactionType>("subscribe");
+  const hasFunds = funds.length > 0;
+  const selectedFund = funds.find(fund => fund.fundCode === selectedFundCode);
+
+  const cashAccountOptions = useMemo(
+    () =>
+      accounts.flatMap(account =>
+        account.securities_cash_accounts.map(cashAccount => ({
+          id: cashAccount.id,
+          brokerageAccountId: account.id,
+          brokerageName: account.account_name,
+          cashAccountName: cashAccount.account_name || cashAccount.currency,
+          currency: cashAccount.currency,
+        }))
+      ),
+    [accounts]
+  );
+
+  const selectedCashAccount = cashAccountOptions.find(item => item.id === selectedCashAccountId);
+  const side: TradeSide =
+    transactionType === "redeem" || transactionType === "switch-out" ? "sell" : "buy";
+
+  useEffect(() => {
+    if (!state.success) return;
+
+    formRef.current?.reset();
+    onSuccess();
+  }, [onSuccess, state.success]);
+
+  return (
+    <form ref={formRef} action={formAction} className="space-y-6">
+      <input type="hidden" name="accountId" value={selectedCashAccount?.brokerageAccountId ?? ""} />
+      <input type="hidden" name="fundCode" value={selectedFund?.fundCode ?? ""} />
+      <input type="hidden" name="side" value={side} />
+      <input
+        type="hidden"
+        name="currency"
+        value={selectedFund?.currency ?? selectedCashAccount?.currency ?? "TWD"}
+      />
+
+      <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+        <label className="space-y-2 text-sm sm:col-span-2">
+          <span className="text-muted-foreground dark:text-zinc-500">
+            基金
+            <RequiredMark />
+          </span>
+          <Popover open={isFundSearchOpen} onOpenChange={setIsFundSearchOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                role="combobox"
+                aria-expanded={isFundSearchOpen}
+                disabled={!hasFunds}
+                className="h-auto min-h-9 w-full justify-between gap-3 rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
+              >
+                {selectedFund ? (
+                  <span className="flex min-w-0 flex-1 items-start gap-2">
+                    <FundOptionContent fund={selectedFund} />
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground dark:text-zinc-400">
+                    {hasFunds ? "搜尋基金名稱或代碼" : "基金資料暫時無法載入"}
+                  </span>
+                )}
+                <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-(--radix-popover-trigger-width) gap-0 overflow-hidden rounded-lg p-0"
+              onTouchMoveCapture={event => event.stopPropagation()}
+              onWheelCapture={event => event.stopPropagation()}
+            >
+              <Command
+                filter={(value, search, keywords) => {
+                  const haystack = [value, ...(keywords ?? [])].join(" ").toLowerCase();
+                  const keywordsToMatch = search
+                    .trim()
+                    .toLowerCase()
+                    .split(/[\s,，]+/);
+
+                  return keywordsToMatch.every(keyword => haystack.includes(keyword)) ? 1 : 0;
+                }}
+              >
+                <CommandInput placeholder="搜尋基金名稱、代碼或投信" />
+                <CommandList className="max-h-72 overscroll-contain">
+                  <CommandEmpty>找不到基金</CommandEmpty>
+                  <CommandGroup>
+                    {funds.map(fund => (
+                      <CommandItem
+                        key={fund.fundCode}
+                        value={fund.fundCode}
+                        keywords={[fund.fundName, fund.companyName, fund.currency]}
+                        onSelect={() => {
+                          setSelectedFundCode(fund.fundCode);
+                          setIsFundSearchOpen(false);
+                        }}
+                        className="items-start [&>svg:last-child]:hidden"
+                      >
+                        <FundOptionContent fund={fund} />
+                        <Check
+                          className={cn(
+                            "ml-auto size-4 shrink-0",
+                            selectedFundCode === fund.fundCode ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {!hasFunds ? (
+            <p className="text-xs text-muted-foreground dark:text-zinc-500">
+              基金資料來源暫時無法連線，稍後重新整理後可再試一次。
+            </p>
+          ) : null}
+        </label>
+
+        <label className="space-y-2 text-sm sm:col-span-2">
+          <span className="text-muted-foreground dark:text-zinc-500">
+            資金戶
+            <RequiredMark />
+          </span>
+          <Select value={selectedCashAccountId} onValueChange={setSelectedCashAccountId} required>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="選擇資金戶" />
+            </SelectTrigger>
+            <SelectContent>
+              {cashAccountOptions.map(account => (
+                <SelectItem key={account.id} value={account.id}>
+                  <span className="font-medium">{account.cashAccountName}</span>
+                  <span className="text-muted-foreground">
+                    {account.brokerageName} · {account.currency}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">
+            交易日期
+            <RequiredMark />
+          </span>
+          <Input name="tradeDate" required type="date" />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">淨值日</span>
+          <Input
+            name="navDate"
+            type="date"
+            defaultValue={toDateInputValue(selectedFund?.latestNavDate ?? "")}
+          />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">交易類型</span>
+          <Select
+            name="transactionType"
+            value={transactionType}
+            onValueChange={value => setTransactionType(value as FundTransactionType)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="subscribe">申購</SelectItem>
+              <SelectItem value="redeem">贖回</SelectItem>
+              <SelectItem value="switch-in">轉入</SelectItem>
+              <SelectItem value="switch-out">轉出</SelectItem>
+            </SelectContent>
+          </Select>
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">配息方式</span>
+          <Select name="dividendMode" defaultValue="accumulation">
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>不領現金</SelectLabel>
+                <SelectItem value="accumulation">
+                  {DIVIDEND_MODE_OPTIONS.find(option => option.value === "accumulation")?.label}
+                </SelectItem>
+                <SelectItem value="reinvest">
+                  {DIVIDEND_MODE_OPTIONS.find(option => option.value === "reinvest")?.label}
+                </SelectItem>
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>現金配息</SelectLabel>
+                {DIVIDEND_MODE_OPTIONS.filter(option => option.value.startsWith("cash")).map(
+                  option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  )
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">
+            單位數
+            <RequiredMark />
+          </span>
+          <Input name="quantity" required type="number" min="0.000001" step="0.000001" />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">
+            單位淨值
+            <RequiredMark />
+          </span>
+          <Input
+            key={selectedFund?.fundCode ?? "unit-price"}
+            name="unitPrice"
+            required
+            type="number"
+            min="0"
+            step="0.000001"
+            defaultValue={selectedFund?.latestNav ?? ""}
+          />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">原始成交金額</span>
+          <Input
+            name="grossAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="不填會自動用單位數 x 單位淨值"
+          />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">實際入帳/扣款</span>
+          <Input
+            name="netAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="不填會依交易方向自動計算"
+          />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">手續費</span>
+          <Input name="fee" type="number" min="0" step="0.01" />
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-500">稅額</span>
+          <Input name="tax" type="number" min="0" step="0.01" />
+        </label>
+      </div>
+
+      <label className="space-y-2 text-sm">
+        <span className="text-muted-foreground dark:text-zinc-500">備註</span>
+        <Textarea name="note" placeholder="可記錄申購批次、轉換原因或備註" />
+      </label>
+
+      {state.message && !state.success ? (
+        <p className="rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {state.message}
+        </p>
+      ) : null}
+
+      <Separator className="mt-10 mb-5" />
+
+      <DialogFooter>
+        <Button type="button" variant="outline" disabled={isPending} onClick={onSuccess}>
+          取消
+        </Button>
+        <Button type="submit" disabled={isPending || !selectedCashAccount || !selectedFund}>
+          {isPending ? "新增中" : "新增"}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
 
@@ -100,87 +388,20 @@ export function AddFundTransactionDialog({
   open,
   onOpenChange,
   accounts,
+  funds,
 }: AddFundTransactionDialogProps) {
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const [formKey, setFormKey] = useState(0);
 
-  const accountOptions = useMemo(() => {
-    return accounts.map(account => ({
-      id: account.id,
-      name: account.account_name ?? account.broker_name,
-    }));
-  }, [accounts]);
-
-  function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm(prev => ({ ...prev, [key]: value }));
-  }
-
-  function updateTransactionType(value: FundTransactionType) {
-    const side: TradeSide = value === "redeem" || value === "switch-out" ? "sell" : "buy";
-    setForm(prev => ({ ...prev, transactionType: value, side }));
-  }
-
-  function resetForm() {
-    setForm(DEFAULT_FORM);
-  }
-
-  function handleDialogOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      resetForm();
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setFormKey(key => key + 1);
     }
 
     onOpenChange(nextOpen);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const quantity = toNumber(form.quantity);
-    const unitPrice = toNumber(form.unitPrice);
-    const grossAmount = form.grossAmount ? toNumber(form.grossAmount) : quantity * unitPrice;
-    const fee = form.fee ? toNumber(form.fee) : 0;
-    const tax = form.tax ? toNumber(form.tax) : 0;
-    const netAmount = form.netAmount
-      ? toNumber(form.netAmount)
-      : calculateNetAmount(form.side, grossAmount, fee, tax);
-
-    if (!form.accountId) {
-      return;
-    }
-
-    const selectedAccount = accounts.find(account => account.id === form.accountId);
-    if (!selectedAccount) {
-      return;
-    }
-
-    const payload: FundTransaction = {
-      id: crypto.randomUUID(),
-      user_uid: selectedAccount.user_uid,
-      account_id: form.accountId,
-      trade_date: toUnixTimestamp(form.tradeDate),
-      settle_date: form.settleDate ? toUnixTimestamp(form.settleDate) : undefined,
-      side: form.side,
-      fund_code: form.fundCode.trim().toUpperCase(),
-      nav_date: form.navDate ? toUnixTimestamp(form.navDate) : undefined,
-      transaction_type: form.transactionType,
-      dividend_mode: form.dividendMode,
-      quantity,
-      unit_price: unitPrice,
-      gross_amount: grossAmount,
-      fee: form.fee ? fee : undefined,
-      tax: form.tax ? tax : undefined,
-      net_amount: netAmount,
-      currency: form.currency,
-      note: form.note.trim() || undefined,
-      created_at: Math.floor(Date.now() / 1000),
-      updated_at: Math.floor(Date.now() / 1000),
-    };
-
-    console.info("新增基金交易明細（FundTransaction）", payload);
-    handleDialogOpenChange(false);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader className="space-y-2 pb-1">
           <DialogTitle className="flex items-center gap-2">
@@ -189,236 +410,12 @@ export function AddFundTransactionDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                券商帳戶
-                <RequiredMark />
-              </span>
-              <Select
-                value={form.accountId}
-                onValueChange={value => updateField("accountId", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="選擇券商帳戶" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountOptions.map(account => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                基金代碼
-                <RequiredMark />
-              </span>
-              <Input
-                required
-                value={form.fundCode}
-                onChange={event => updateField("fundCode", event.target.value)}
-                placeholder="例如 ALTW-A 或 MFG-001"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                交易日期
-                <RequiredMark />
-              </span>
-              <Input
-                required
-                type="date"
-                value={form.tradeDate}
-                onChange={event => updateField("tradeDate", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                交易方向
-                <RequiredMark />
-              </span>
-              <Select
-                value={form.side}
-                onValueChange={value => updateField("side", value as TradeSide)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="buy">買進</SelectItem>
-                  <SelectItem value="sell">賣出</SelectItem>
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">淨值日</span>
-              <Input
-                type="date"
-                value={form.navDate}
-                onChange={event => updateField("navDate", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">交割日期</span>
-              <Input
-                type="date"
-                value={form.settleDate}
-                onChange={event => updateField("settleDate", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">交易類型</span>
-              <Select
-                value={form.transactionType}
-                onValueChange={value => updateTransactionType(value as FundTransactionType)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="subscribe">申購</SelectItem>
-                  <SelectItem value="redeem">贖回</SelectItem>
-                  <SelectItem value="switch-in">轉入</SelectItem>
-                  <SelectItem value="switch-out">轉出</SelectItem>
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">配息方式</span>
-              <Select
-                value={form.dividendMode}
-                onValueChange={value => updateField("dividendMode", value as DividendMode)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">現金配息</SelectItem>
-                  <SelectItem value="reinvest">配息再投入</SelectItem>
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">幣別</span>
-              <Select value={form.currency} onValueChange={value => updateField("currency", value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TWD">TWD</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="JPY">JPY</SelectItem>
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                單位數
-                <RequiredMark />
-              </span>
-              <Input
-                required
-                type="number"
-                min="0.000001"
-                step="0.000001"
-                value={form.quantity}
-                onChange={event => updateField("quantity", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">
-                單位淨值
-                <RequiredMark />
-              </span>
-              <Input
-                required
-                type="number"
-                min="0"
-                step="0.000001"
-                value={form.unitPrice}
-                onChange={event => updateField("unitPrice", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">原始成交金額</span>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.grossAmount}
-                onChange={event => updateField("grossAmount", event.target.value)}
-                placeholder="不填會自動用單位數 x 單位淨值"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">實際入帳/扣款</span>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.netAmount}
-                onChange={event => updateField("netAmount", event.target.value)}
-                placeholder="不填會依交易方向自動計算"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">手續費</span>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.fee}
-                onChange={event => updateField("fee", event.target.value)}
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground dark:text-zinc-100">稅額</span>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.tax}
-                onChange={event => updateField("tax", event.target.value)}
-              />
-            </label>
-          </div>
-
-          <label className="space-y-2 text-sm">
-            <span className="text-muted-foreground dark:text-zinc-100">備註</span>
-            <Textarea
-              value={form.note}
-              onChange={event => updateField("note", event.target.value)}
-              placeholder="可記錄申購批次、轉換原因或備註"
-            />
-          </label>
-
-          <Separator className="mt-10 mb-5" />
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => handleDialogOpenChange(false)}>
-              取消
-            </Button>
-            <Button type="submit">新增</Button>
-          </DialogFooter>
-        </form>
+        <AddFundTransactionForm
+          key={formKey}
+          accounts={accounts}
+          funds={funds}
+          onSuccess={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );

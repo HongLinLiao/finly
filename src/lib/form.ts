@@ -11,3 +11,23 @@ export function normalizeCurrency(value: FormDataEntryValue | null) {
 
   return /^[A-Z]{3}$/.test(text) ? text : "INVALID";
 }
+
+export function normalizeNumber(value: FormDataEntryValue | null) {
+  const text = normalizeOptionalText(value);
+
+  if (!text) return null;
+
+  const number = Number(text);
+
+  return Number.isFinite(number) ? number : null;
+}
+
+export function normalizeDate(value: FormDataEntryValue | null) {
+  const text = normalizeOptionalText(value);
+
+  if (!text) return null;
+
+  const date = new Date(`${text}T00:00:00.000+08:00`);
+
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}

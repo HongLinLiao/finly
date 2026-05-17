@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DIVIDEND_MODE_OPTIONS } from "@/types/fund";
 
 import type { FundRisk } from "./fund-list-data";
 import type { DividendMode } from "@/types/fund";
@@ -97,9 +98,12 @@ export const FundFilterPanel = ({
               <SelectValue placeholder="配息方式" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">全部配息</SelectItem>
-              <SelectItem value="cash">現金配息</SelectItem>
-              <SelectItem value="reinvest">配息再投入</SelectItem>
+              <SelectItem value="all">全部方式</SelectItem>
+              {DIVIDEND_MODE_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

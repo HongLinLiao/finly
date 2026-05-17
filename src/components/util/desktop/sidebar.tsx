@@ -85,12 +85,12 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3 text-xs">
+      {/* <SidebarFooter className="px-4 py-3 text-xs">
         <div className="flex items-center justify-between">
           <span>Finly Dashboard</span>
           <span className="inline-flex h-2 w-2 rounded-full bg-primary/70" aria-hidden />
         </div>
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   );
 };

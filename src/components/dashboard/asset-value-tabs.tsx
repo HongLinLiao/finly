@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AssetValueChartCard } from "./asset-value-chart-card";
 
-import type { AssetValueItem } from "@/app/mock";
+import type { AssetValueItem } from "@/types/dashboard";
 
 interface AssetValueTabsProps {
   stockValues: AssetValueItem[];

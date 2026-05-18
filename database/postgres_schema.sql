@@ -12,7 +12,6 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TYPE asset_kind AS ENUM ('stock', 'fund');
 CREATE TYPE trade_side AS ENUM ('buy', 'sell');
 CREATE TYPE account_status AS ENUM ('active', 'inactive', 'closed');
-CREATE TYPE board_lot_type AS ENUM ('odd', 'regular');
 CREATE TYPE fund_transaction_type AS ENUM ('subscribe', 'redeem', 'switch-in', 'switch-out');
 CREATE TYPE dividend_mode AS ENUM (
   'accumulation',
@@ -170,11 +169,9 @@ CREATE TABLE stock_transactions (
   user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   trade_date TIMESTAMPTZ NOT NULL,
-  settle_date TIMESTAMPTZ,
   side trade_side NOT NULL,
   symbol VARCHAR(32) NOT NULL,
   market VARCHAR(32),
-  board_lot_type board_lot_type,
   quantity NUMERIC(20, 6) NOT NULL CHECK (quantity > 0),
   unit_price NUMERIC(20, 6) NOT NULL CHECK (unit_price >= 0),
   gross_amount NUMERIC(20, 6) NOT NULL CHECK (gross_amount >= 0),
@@ -192,11 +189,9 @@ COMMENT ON COLUMN stock_transactions.id IS '交易唯一識別碼';
 COMMENT ON COLUMN stock_transactions.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN stock_transactions.account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN stock_transactions.trade_date IS '交易時間';
-COMMENT ON COLUMN stock_transactions.settle_date IS '交割時間';
 COMMENT ON COLUMN stock_transactions.side IS '交易方向：buy/sell';
 COMMENT ON COLUMN stock_transactions.symbol IS '股票代號';
 COMMENT ON COLUMN stock_transactions.market IS '股票市場（例如 TWSE/NASDAQ）';
-COMMENT ON COLUMN stock_transactions.board_lot_type IS '股票交易單位：odd/regular';
 COMMENT ON COLUMN stock_transactions.quantity IS '交易數量（股數）';
 COMMENT ON COLUMN stock_transactions.unit_price IS '每股成交價';
 COMMENT ON COLUMN stock_transactions.gross_amount IS '原始成交金額（未扣費用/稅）';
@@ -218,7 +213,6 @@ CREATE TABLE fund_transactions (
   user_uid UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
   account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   trade_date TIMESTAMPTZ NOT NULL,
-  settle_date TIMESTAMPTZ,
   side trade_side NOT NULL,
   fund_code VARCHAR(64) NOT NULL,
   nav_date TIMESTAMPTZ,
@@ -241,7 +235,6 @@ COMMENT ON COLUMN fund_transactions.id IS '交易唯一識別碼';
 COMMENT ON COLUMN fund_transactions.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN fund_transactions.account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN fund_transactions.trade_date IS '交易時間';
-COMMENT ON COLUMN fund_transactions.settle_date IS '交割時間';
 COMMENT ON COLUMN fund_transactions.side IS '交易方向：buy/sell';
 COMMENT ON COLUMN fund_transactions.fund_code IS '基金代碼';
 COMMENT ON COLUMN fund_transactions.nav_date IS '基金淨值日';
@@ -273,7 +266,6 @@ CREATE TABLE cash_account_movements (
   brokerage_account_id UUID NOT NULL REFERENCES brokerage_accounts(id) ON DELETE CASCADE,
   cash_account_id UUID NOT NULL REFERENCES securities_cash_accounts(id) ON DELETE CASCADE,
   occurred_at TIMESTAMPTZ NOT NULL,
-  settle_at TIMESTAMPTZ,
   direction cash_movement_direction NOT NULL,
   method cash_movement_method NOT NULL,
   amount NUMERIC(20, 6) NOT NULL CHECK (amount > 0),
@@ -300,7 +292,6 @@ COMMENT ON COLUMN cash_account_movements.user_uid IS '所屬使用者 UID';
 COMMENT ON COLUMN cash_account_movements.brokerage_account_id IS '所屬證券戶 ID';
 COMMENT ON COLUMN cash_account_movements.cash_account_id IS '所屬資金帳戶 ID';
 COMMENT ON COLUMN cash_account_movements.occurred_at IS '異動發生時間';
-COMMENT ON COLUMN cash_account_movements.settle_at IS '交割時間';
 COMMENT ON COLUMN cash_account_movements.direction IS '異動方向：in/out';
 COMMENT ON COLUMN cash_account_movements.method IS '異動方式（轉入、交割、費用、配息等）';
 COMMENT ON COLUMN cash_account_movements.amount IS '異動金額，固定正數';

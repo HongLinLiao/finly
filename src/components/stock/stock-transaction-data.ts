@@ -1,13 +1,10 @@
+import { formatCurrency as formatSharedCurrency } from "@/lib/format";
+
 import type { TradeSide } from "@/types";
 
 export const sideLabels: Record<TradeSide, string> = {
   buy: "買進",
   sell: "賣出",
-};
-
-export const boardLotLabels: Record<"regular" | "odd", string> = {
-  regular: "整股",
-  odd: "零股",
 };
 
 const pad2 = (value: number) => value.toString().padStart(2, "0");
@@ -36,6 +33,5 @@ export const formatNumber = (value: number, fractionDigits = 0) => {
 };
 
 export const formatCurrency = (amount: number, currency: string) => {
-  const fractionDigits = currency === "TWD" ? 0 : 2;
-  return `${currency} ${formatNumber(amount, fractionDigits)}`;
+  return formatSharedCurrency(amount, currency);
 };

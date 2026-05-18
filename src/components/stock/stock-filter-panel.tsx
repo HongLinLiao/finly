@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { formatPercent } from "@/lib/format";
 
 import { formatCurrency } from "./stock-transaction-data";
 
@@ -28,6 +29,14 @@ interface StockFilterPanelProps {
   sellCount: number;
   totalNet: number;
   currency: string;
+  positionSummaries: {
+    currency: string;
+    marketValue: number;
+    unrealizedPnl: number;
+    unrealizedReturnRate: number;
+    pricedPositionCount: number;
+    positionCount: number;
+  }[];
 }
 
 export function StockFilterPanel({
@@ -44,6 +53,7 @@ export function StockFilterPanel({
   sellCount,
   totalNet,
   currency,
+  positionSummaries,
 }: StockFilterPanelProps) {
   return (
     <Card className="shadow-md">
@@ -58,6 +68,30 @@ export function StockFilterPanel({
         <p className="text-xs text-foreground dark:text-zinc-100">
           淨額 {formatCurrency(totalNet, currency)}
         </p>
+        {positionSummaries.length ? (
+          <div className="grid gap-2 pt-2 text-xs text-foreground dark:text-zinc-100 lg:grid-cols-2">
+            {positionSummaries.map(summary => {
+              const pnlColor =
+                summary.unrealizedPnl >= 0
+                  ? "text-emerald-600 dark:text-emerald-300"
+                  : "text-rose-500";
+
+              return (
+                <div key={summary.currency} className="space-y-1">
+                  <p>
+                    {summary.currency} 持股 {summary.positionCount} 檔，已有收盤價{" "}
+                    {summary.pricedPositionCount} 檔
+                  </p>
+                  <p>持股市值 {formatCurrency(summary.marketValue, summary.currency)}</p>
+                  <p className={pnlColor}>
+                    未實現損益 {formatCurrency(summary.unrealizedPnl, summary.currency)} ·{" "}
+                    {formatPercent(summary.unrealizedReturnRate)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </CardHeader>
 
       <CardContent className="pt-1">

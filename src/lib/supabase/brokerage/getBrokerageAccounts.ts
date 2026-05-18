@@ -5,7 +5,14 @@ import type { BrokerageAccount, SecuritiesCashAccount } from "@/types";
 export type BrokerageAccountWithCashAccounts = BrokerageAccount & {
   securities_cash_accounts: Pick<
     SecuritiesCashAccount,
-    "id" | "currency" | "account_name" | "status"
+    | "id"
+    | "user_uid"
+    | "brokerage_account_id"
+    | "currency"
+    | "account_name"
+    | "status"
+    | "created_at"
+    | "updated_at"
   >[];
 };
 
@@ -27,9 +34,13 @@ async function getBrokerageAccountRecords(uid: string) {
         updated_at,
         securities_cash_accounts (
           id,
+          user_uid,
+          brokerage_account_id,
           currency,
           account_name,
-          status
+          status,
+          created_at,
+          updated_at
         )
       `
     )

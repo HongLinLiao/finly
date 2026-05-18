@@ -1,19 +1,19 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatPercent } from "@/lib/format";
 
-interface FundSummaryStripProps {
+interface StockSummaryStripProps {
   count: number;
   marketValue: number;
   unrealizedPnl: number;
   unrealizedReturnRate: number;
 }
 
-export const FundSummaryStrip = ({
+export const StockSummaryStrip = ({
   count,
   marketValue,
   unrealizedPnl,
   unrealizedReturnRate,
-}: FundSummaryStripProps) => {
+}: StockSummaryStripProps) => {
   const pnlColor = unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
     unrealizedReturnRate >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
@@ -23,7 +23,7 @@ export const FundSummaryStrip = ({
       <Card size="sm" className="shadow-sm">
         <CardHeader>
           <CardDescription className="text-muted-foreground dark:text-zinc-500">
-            基金檔數
+            股票檔數
           </CardDescription>
           <CardTitle className="text-xl">{count}</CardTitle>
         </CardHeader>
@@ -31,7 +31,7 @@ export const FundSummaryStrip = ({
       <Card size="sm" className="shadow-sm">
         <CardHeader>
           <CardDescription className="text-muted-foreground dark:text-zinc-500">
-            總市值
+            總市值（折合台幣）
           </CardDescription>
           <CardTitle className="text-xl">{formatCurrency(marketValue, "TWD")}</CardTitle>
         </CardHeader>
@@ -39,7 +39,7 @@ export const FundSummaryStrip = ({
       <Card size="sm" className="shadow-sm">
         <CardHeader>
           <CardDescription className="text-muted-foreground dark:text-zinc-500">
-            未實現損益
+            未實現損益（折合台幣）
           </CardDescription>
           <CardTitle className={pnlColor}>{formatCurrency(unrealizedPnl, "TWD")}</CardTitle>
         </CardHeader>

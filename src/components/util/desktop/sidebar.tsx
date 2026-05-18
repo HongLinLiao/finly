@@ -34,8 +34,8 @@ interface DesktopSidebarProps {
 
 const DESKTOP_MENU = [
   { title: "首頁", icon: House, href: "/" },
-  { title: "基金", icon: HandCoins, href: "/funds" },
   { title: "股票", icon: ChartCandlestick, href: "/stocks" },
+  { title: "基金", icon: HandCoins, href: "/funds" },
   {
     title: "設定",
     icon: Settings,

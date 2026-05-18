@@ -66,8 +66,6 @@ export interface CashAccountMovement {
   cash_account_id: string;
   /** 異動時間（Unix timestamp） */
   occurred_at: Timestamp;
-  /** 交割時間（Unix timestamp） */
-  settle_at?: Timestamp;
   /** 異動方向 */
   direction: CashMovementDirection;
   /** 異動方式 */

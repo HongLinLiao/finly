@@ -4,6 +4,7 @@ import { Coins, Landmark, LineChart, PiggyBank } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { formatCurrency } from "@/lib/format";
 
 import type { ComponentType } from "react";
 
@@ -12,16 +13,6 @@ interface PortfolioKpiStripProps {
   foreignCashTotal: number;
   stockTotalValue: number;
   fundTotalValue: number;
-}
-
-function formatCompactCurrency(value: number) {
-  return new Intl.NumberFormat("zh-TW", {
-    style: "currency",
-    currency: "TWD",
-    notation: "compact",
-    compactDisplay: "short",
-    maximumFractionDigits: 1,
-  }).format(value);
 }
 
 function KpiCard({
@@ -42,7 +33,7 @@ function KpiCard({
               {label}
             </p>
             <p className="mt-2 text-xl font-semibold text-foreground dark:text-zinc-100">
-              {formatCompactCurrency(value)}
+              {formatCurrency(value, "TWD")}
             </p>
           </div>
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">

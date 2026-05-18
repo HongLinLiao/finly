@@ -9,6 +9,7 @@ import { StockPositionCard } from "@/components/stock/stock-position-card";
 import { StockSummaryStrip } from "@/components/stock/stock-summary-strip";
 import { StockTransactionEmpty } from "@/components/stock/stock-transaction-empty";
 import { Button } from "@/components/ui/button";
+import { toTwdValue } from "@/lib/currency-conversion";
 import { getStockPriceKey } from "@/lib/stock-price";
 
 import type { StockPosition } from "@/components/stock/stock-list-data";
@@ -20,6 +21,7 @@ interface StocksClientPageProps {
   accounts: BrokerageAccountWithCashAccounts[];
   transactions: StockTransaction[];
   quotes: StockPriceQuote[];
+  ratesToTwd: Record<string, number>;
 }
 
 function buildStockPositions(transactions: StockTransaction[], quotes: StockPriceQuote[]) {
@@ -94,7 +96,12 @@ function buildStockPositions(transactions: StockTransaction[], quotes: StockPric
     .sort((a, b) => b.marketValue - a.marketValue);
 }
 
-export function StocksClientPage({ accounts, transactions, quotes }: StocksClientPageProps) {
+export function StocksClientPage({
+  accounts,
+  transactions,
+  quotes,
+  ratesToTwd,
+}: StocksClientPageProps) {
   const [openedRows, setOpenedRows] = useState<Record<string, boolean>>({});
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
@@ -106,19 +113,23 @@ export function StocksClientPage({ accounts, transactions, quotes }: StocksClien
   const summary = useMemo(() => {
     const totals = positions.reduce(
       (acc, item) => ({
-        marketValue: acc.marketValue + item.marketValue,
-        costAmount: acc.costAmount + item.costAmount,
+        marketValue: acc.marketValue + toTwdValue(item.marketValue, item.currency, ratesToTwd),
+        costAmount: acc.costAmount + toTwdValue(item.costAmount, item.currency, ratesToTwd),
       }),
       { marketValue: 0, costAmount: 0 }
     );
-
     const count = positions.length;
     const unrealizedPnl = totals.marketValue - totals.costAmount;
     const unrealizedReturnRate =
       totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
 
-    return { count, marketValue: totals.marketValue, unrealizedPnl, unrealizedReturnRate };
-  }, [positions]);
+    return {
+      count,
+      marketValue: totals.marketValue,
+      unrealizedPnl,
+      unrealizedReturnRate,
+    };
+  }, [positions, ratesToTwd]);
 
   return (
     <section className="space-y-5">

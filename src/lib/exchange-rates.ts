@@ -1,11 +1,8 @@
 import "server-only";
 
+import { FALLBACK_RATES_TO_TWD } from "@/lib/currency-conversion";
+
 const FRANKFURTER_API_BASE_URL = "https://api.frankfurter.dev";
-const FALLBACK_RATES_TO_TWD: Record<string, number> = {
-  TWD: 1,
-  USD: 32,
-  JPY: 0.22,
-};
 const EXCHANGE_RATE_REVALIDATE_SECONDS = 60 * 60 * 12;
 
 interface FrankfurterLatestResponse {
@@ -60,10 +57,4 @@ export async function getExchangeRatesToTwd(currencies: string[]) {
   );
 
   return rates;
-}
-
-export function toTwdValue(value: number, currency: string, ratesToTwd: Record<string, number>) {
-  const normalizedCurrency = currency.trim().toUpperCase();
-
-  return value * (ratesToTwd[normalizedCurrency] ?? FALLBACK_RATES_TO_TWD[normalizedCurrency] ?? 1);
 }

@@ -1,3 +1,5 @@
+import { formatCurrency as formatSharedCurrency } from "@/lib/format";
+
 import type { TradeSide } from "@/types";
 
 export const sideLabels: Record<TradeSide, string> = {
@@ -31,6 +33,5 @@ export const formatNumber = (value: number, fractionDigits = 0) => {
 };
 
 export const formatCurrency = (amount: number, currency: string) => {
-  const fractionDigits = currency === "TWD" ? 0 : 2;
-  return `${currency} ${formatNumber(amount, fractionDigits)}`;
+  return formatSharedCurrency(amount, currency);
 };

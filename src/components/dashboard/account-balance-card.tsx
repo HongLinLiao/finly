@@ -1,6 +1,7 @@
 import { Landmark, Wallet } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/format";
 
 interface AccountBalanceCardProps {
   title: string;
@@ -11,14 +12,6 @@ interface AccountBalanceCardProps {
     currency: string;
     balance: number;
   }[];
-}
-
-function formatCurrency(value: number, currency: string) {
-  return new Intl.NumberFormat("zh-TW", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 export function AccountBalanceCard({ title, subtitle, balances }: AccountBalanceCardProps) {

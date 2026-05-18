@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { StocksClientPage } from "@/components/stock/stocks-client-page";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getExchangeRatesToTwd } from "@/lib/exchange-rates";
 import { fetchYahooStockQuotes } from "@/lib/yahoo-finance";
 import getBrokerageAccounts from "@/services/brokerage/getBrokerageAccounts";
 import getStockTransactions from "@/services/stock/getStockTransactions";
@@ -28,10 +29,18 @@ const StocksPage = async () => {
       currency: transaction.currency,
     }))
   );
+  const ratesToTwd = await getExchangeRatesToTwd(
+    transactions.map(transaction => transaction.currency)
+  );
 
   return (
     <Page breadcrumbs={[{ label: "股票", active: true }]}>
-      <StocksClientPage accounts={accounts} transactions={transactions} quotes={quotes} />
+      <StocksClientPage
+        accounts={accounts}
+        transactions={transactions}
+        quotes={quotes}
+        ratesToTwd={ratesToTwd}
+      />
     </Page>
   );
 };

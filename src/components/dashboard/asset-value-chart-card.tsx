@@ -9,20 +9,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { formatCurrency } from "@/lib/format";
 
 import type { AssetValueItem } from "@/types/dashboard";
 
 interface AssetValueChartCardProps {
   title: string;
   items: AssetValueItem[];
-}
-
-function formatCurrency(value: number, currency: string) {
-  return new Intl.NumberFormat("zh-TW", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function formatPercent(value: number) {

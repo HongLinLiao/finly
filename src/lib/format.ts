@@ -3,17 +3,21 @@ export const truncateToDigits = (value: number, fractionDigits: number) => {
   return Math.trunc(value * factor) / factor;
 };
 
-export const formatCurrency = (value: number, currency: string) =>
-  new Intl.NumberFormat("zh-TW", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(truncateToDigits(value, 0));
+export const formatNumber = (value: number, fractionDigits = 0) => {
+  const truncatedValue = truncateToDigits(value, fractionDigits);
 
-export const formatNumber = (value: number) =>
-  new Intl.NumberFormat("zh-TW", {
-    maximumFractionDigits: 0,
-  }).format(truncateToDigits(value, 0));
+  return new Intl.NumberFormat("zh-TW", {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(truncatedValue);
+};
+
+export const formatCurrency = (value: number, currency: string) => {
+  const normalizedCurrency = currency.trim().toUpperCase();
+  const fractionDigits = normalizedCurrency === "TWD" ? 0 : 2;
+
+  return `${normalizedCurrency} $${formatNumber(value, fractionDigits)}`;
+};
 
 export const formatPercent = (value: number) => {
   const truncatedValue = truncateToDigits(value, 2);

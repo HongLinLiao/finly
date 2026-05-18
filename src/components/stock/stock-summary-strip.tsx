@@ -1,5 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, formatPercent } from "@/lib/format";
+import { formatCurrency, formatPercent } from "@/lib/format";
 
 interface StockSummaryStripProps {
   count: number;
@@ -31,17 +31,17 @@ export const StockSummaryStrip = ({
       <Card size="sm" className="shadow-sm">
         <CardHeader>
           <CardDescription className="text-muted-foreground dark:text-zinc-500">
-            總市值
+            總市值（折合台幣）
           </CardDescription>
-          <CardTitle className="text-xl">{formatNumber(marketValue)}</CardTitle>
+          <CardTitle className="text-xl">{formatCurrency(marketValue, "TWD")}</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm" className="shadow-sm">
         <CardHeader>
           <CardDescription className="text-muted-foreground dark:text-zinc-500">
-            未實現損益
+            未實現損益（折合台幣）
           </CardDescription>
-          <CardTitle className={pnlColor}>{formatNumber(unrealizedPnl)}</CardTitle>
+          <CardTitle className={pnlColor}>{formatCurrency(unrealizedPnl, "TWD")}</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm" className="shadow-sm">

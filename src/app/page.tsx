@@ -5,6 +5,7 @@ import { AssetValueTabs } from "@/components/dashboard/asset-value-tabs";
 import { PortfolioKpiStrip } from "@/components/dashboard/portfolio-kpi-strip";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getExchangeRatesToTwd, toTwdValue } from "@/lib/exchange-rates";
 import { getStockPriceKey } from "@/lib/stock-price";
 import { fetchYahooStockQuotes } from "@/lib/yahoo-finance";
 import getBrokerageAccounts from "@/services/brokerage/getBrokerageAccounts";
@@ -25,16 +26,6 @@ import type {
 } from "@/types";
 
 export const dynamic = "force-dynamic";
-
-function toTwdApprox(value: number, currency: string) {
-  const fxToTwd: Record<string, number> = {
-    TWD: 1,
-    USD: 32,
-    JPY: 0.22,
-  };
-
-  return value * (fxToTwd[currency] ?? 1);
-}
 
 function getAccountName(accounts: BrokerageAccountWithCashAccounts[], accountId: string) {
   const account = accounts.find(item => item.id === accountId);
@@ -72,7 +63,8 @@ function buildCashAccounts(
 function buildStockValues(
   accounts: BrokerageAccountWithCashAccounts[],
   transactions: StockTransaction[],
-  quotes: StockPriceQuote[]
+  quotes: StockPriceQuote[],
+  ratesToTwd: Record<string, number>
 ) {
   const quoteMap = new Map(quotes.map(quote => [quote.key, quote]));
   const positionMap = new Map<
@@ -161,14 +153,17 @@ function buildStockValues(
       unrealizedReturnRate: item.cost > 0 ? ((item.marketValue - item.cost) / item.cost) * 100 : 0,
     }))
     .sort(
-      (a, b) => toTwdApprox(b.marketValue, b.currency) - toTwdApprox(a.marketValue, a.currency)
+      (a, b) =>
+        toTwdValue(b.marketValue, b.currency, ratesToTwd) -
+        toTwdValue(a.marketValue, a.currency, ratesToTwd)
     );
 }
 
 function buildFundValues(
   accounts: BrokerageAccountWithCashAccounts[],
   transactions: FundTransaction[],
-  funds: TaiwanFundOption[]
+  funds: TaiwanFundOption[],
+  ratesToTwd: Record<string, number>
 ) {
   const fundMap = new Map(funds.map(fund => [fund.fundCode, fund]));
   const positionMap = new Map<
@@ -252,7 +247,9 @@ function buildFundValues(
       unrealizedReturnRate: item.cost > 0 ? ((item.marketValue - item.cost) / item.cost) * 100 : 0,
     }))
     .sort(
-      (a, b) => toTwdApprox(b.marketValue, b.currency) - toTwdApprox(a.marketValue, a.currency)
+      (a, b) =>
+        toTwdValue(b.marketValue, b.currency, ratesToTwd) -
+        toTwdValue(a.marketValue, a.currency, ratesToTwd)
     );
 }
 
@@ -280,9 +277,17 @@ export default async function Home() {
     }))
   );
 
+  const currencies = [
+    ...cashMovements.map(movement => movement.currency),
+    ...stockTransactions.map(transaction => transaction.currency),
+    ...fundTransactions.map(transaction => transaction.currency),
+    ...funds.map(fund => fund.currency),
+  ];
+  const ratesToTwd = await getExchangeRatesToTwd(currencies);
+
   const cashAccounts = buildCashAccounts(accounts, cashMovements);
-  const stockValues = buildStockValues(accounts, stockTransactions, quotes);
-  const fundValues = buildFundValues(accounts, fundTransactions, funds);
+  const stockValues = buildStockValues(accounts, stockTransactions, quotes, ratesToTwd);
+  const fundValues = buildFundValues(accounts, fundTransactions, funds, ratesToTwd);
 
   const twd_cash_total = cashAccounts
     .filter(item => item.currency === "TWD")
@@ -290,15 +295,15 @@ export default async function Home() {
 
   const foreign_cash_total = cashAccounts
     .filter(item => item.currency !== "TWD")
-    .reduce((sum, item) => sum + toTwdApprox(item.balance, item.currency), 0);
+    .reduce((sum, item) => sum + toTwdValue(item.balance, item.currency, ratesToTwd), 0);
 
   const stock_total_value = stockValues.reduce(
-    (sum, item) => sum + toTwdApprox(item.marketValue, item.currency),
+    (sum, item) => sum + toTwdValue(item.marketValue, item.currency, ratesToTwd),
     0
   );
 
   const fund_total_value = fundValues.reduce(
-    (sum, item) => sum + toTwdApprox(item.marketValue, item.currency),
+    (sum, item) => sum + toTwdValue(item.marketValue, item.currency, ratesToTwd),
     0
   );
 

@@ -34,7 +34,11 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
     }
   >();
 
-  transactions.forEach(transaction => {
+  const chronologicalTransactions = [...transactions].sort(
+    (a, b) => a.trade_date - b.trade_date || a.created_at - b.created_at
+  );
+
+  chronologicalTransactions.forEach(transaction => {
     const existing =
       positionMap.get(transaction.fund_code) ??
       ({
@@ -51,13 +55,18 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
         currency: string;
       });
 
-    const signedQuantity =
-      transaction.side === "sell" ? -transaction.quantity : transaction.quantity;
-    const signedCost =
-      transaction.side === "sell" ? -transaction.net_amount : transaction.net_amount;
+    if (transaction.side === "sell") {
+      const averageCost = existing.quantity > 0 ? existing.costAmount / existing.quantity : 0;
+      const soldQuantity = Math.min(transaction.quantity, existing.quantity);
 
-    existing.quantity += signedQuantity;
-    existing.costAmount += signedCost;
+      existing.quantity -= transaction.quantity;
+      existing.costAmount =
+        existing.quantity > 0 ? existing.costAmount - averageCost * soldQuantity : 0;
+    } else {
+      existing.quantity += transaction.quantity;
+      existing.costAmount += transaction.net_amount;
+    }
+
     existing.dividendMode = transaction.dividend_mode ?? existing.dividendMode;
     existing.currency = transaction.currency;
     positionMap.set(transaction.fund_code, existing);
@@ -69,7 +78,7 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
       const fund = fundMap.get(position.fundCode);
       const latestNav = fund?.latestNav ?? 0;
       const marketValue = position.quantity * latestNav;
-      const returnRate =
+      const unrealizedReturnRate =
         position.costAmount > 0
           ? ((marketValue - position.costAmount) / position.costAmount) * 100
           : 0;
@@ -84,8 +93,7 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
         currency: (fund?.currency ?? position.currency) as FundPosition["currency"],
         costAmount: position.costAmount,
         marketValue,
-        return1m: returnRate,
-        return1y: returnRate,
+        unrealizedReturnRate,
       };
     })
     .sort((a, b) => b.marketValue - a.marketValue);
@@ -101,16 +109,16 @@ export function FundsClientPage({ accounts, funds, transactions }: FundsClientPa
       (acc, item) => ({
         marketValue: acc.marketValue + item.marketValue,
         costAmount: acc.costAmount + item.costAmount,
-        return1y: acc.return1y + item.return1y,
       }),
-      { marketValue: 0, costAmount: 0, return1y: 0 }
+      { marketValue: 0, costAmount: 0 }
     );
 
     const count = positions.length;
-    const avgReturn1y = count ? totals.return1y / count : 0;
     const unrealizedPnl = totals.marketValue - totals.costAmount;
+    const unrealizedReturnRate =
+      totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
 
-    return { count, marketValue: totals.marketValue, unrealizedPnl, avgReturn1y };
+    return { count, marketValue: totals.marketValue, unrealizedPnl, unrealizedReturnRate };
   }, [positions]);
 
   return (
@@ -121,7 +129,7 @@ export function FundsClientPage({ accounts, funds, transactions }: FundsClientPa
         count={summary.count}
         marketValue={summary.marketValue}
         unrealizedPnl={summary.unrealizedPnl}
-        avgReturn1y={summary.avgReturn1y}
+        unrealizedReturnRate={summary.unrealizedReturnRate}
       />
 
       <div className="space-y-3">

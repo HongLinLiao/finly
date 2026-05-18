@@ -4,9 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { formatCurrency, formatPercent } from "@/lib/format";
 import { getDividendModeLabel } from "@/types/fund";
-
-import { formatCurrency, formatPercent } from "./fund-format";
 
 import type { FundPosition } from "./fund-list-data";
 import type { ReactNode } from "react";
@@ -21,7 +20,7 @@ export const FundPositionCard = ({ item, open, onOpenChange }: FundPositionCardP
   const unrealizedPnl = item.marketValue - item.costAmount;
   const pnlColor = unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
-    item.return1y >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
+    item.unrealizedReturnRate >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const dividendLabel = getDividendModeLabel(item.dividendMode);
 
   return (
@@ -80,11 +79,10 @@ export const FundPositionCard = ({ item, open, onOpenChange }: FundPositionCardP
                 valueClassName={pnlColor}
               />
               <DetailField
-                label="一年報酬"
-                value={formatPercent(item.return1y)}
+                label="未實現報酬率"
+                value={formatPercent(item.unrealizedReturnRate)}
                 valueClassName={returnColor}
               />
-              <DetailField label="近一月報酬" value={formatPercent(item.return1m)} />
               <DetailField label="配息方式" value={dividendLabel} />
               <DetailField label="風險等級" value={item.risk} />
               <DetailField label="幣別" value={item.currency} />

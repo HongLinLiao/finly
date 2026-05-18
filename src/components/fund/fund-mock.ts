@@ -13,8 +13,7 @@ export const fundPositionsMock: FundPosition[] = [
     currency: "TWD",
     costAmount: 320000,
     marketValue: 362500,
-    return1m: 3.6,
-    return1y: 17.4,
+    unrealizedReturnRate: 13.28125,
   },
   {
     id: "fund-002",
@@ -26,8 +25,7 @@ export const fundPositionsMock: FundPosition[] = [
     currency: "USD",
     costAmount: 9800,
     marketValue: 10340,
-    return1m: 1.1,
-    return1y: 7.8,
+    unrealizedReturnRate: 5.510204081632653,
   },
   {
     id: "fund-003",
@@ -39,8 +37,7 @@ export const fundPositionsMock: FundPosition[] = [
     currency: "USD",
     costAmount: 12500,
     marketValue: 11780,
-    return1m: -2.3,
-    return1y: 4.2,
+    unrealizedReturnRate: -5.76,
   },
   {
     id: "fund-004",
@@ -52,8 +49,7 @@ export const fundPositionsMock: FundPosition[] = [
     currency: "TWD",
     costAmount: 210000,
     marketValue: 224200,
-    return1m: 2.2,
-    return1y: 10.4,
+    unrealizedReturnRate: 6.761904761904762,
   },
   {
     id: "fund-005",
@@ -65,7 +61,6 @@ export const fundPositionsMock: FundPosition[] = [
     currency: "TWD",
     costAmount: 160000,
     marketValue: 156900,
-    return1m: -0.8,
-    return1y: 5.6,
+    unrealizedReturnRate: -1.9375,
   },
 ];

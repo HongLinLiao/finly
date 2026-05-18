@@ -15,7 +15,7 @@ import { DIVIDEND_MODE_OPTIONS } from "@/types/fund";
 import type { FundRisk } from "./fund-list-data";
 import type { DividendMode } from "@/types/fund";
 
-export type FundSortBy = "marketValue" | "return1y" | "unrealizedPnl";
+export type FundSortBy = "marketValue" | "unrealizedReturnRate" | "unrealizedPnl";
 
 interface FundFilterPanelProps {
   keyword: string;
@@ -126,10 +126,10 @@ export const FundFilterPanel = ({
           </Button>
           <Button
             size="xs"
-            variant={sortBy === "return1y" ? "default" : "outline"}
-            onClick={() => onSortByChange("return1y")}
+            variant={sortBy === "unrealizedReturnRate" ? "default" : "outline"}
+            onClick={() => onSortByChange("unrealizedReturnRate")}
           >
-            一年報酬
+            報酬率
           </Button>
         </div>
       </CardContent>

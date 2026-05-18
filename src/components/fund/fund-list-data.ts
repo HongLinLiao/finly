@@ -13,6 +13,5 @@ export interface FundPosition {
   currency: FundCurrency;
   costAmount: number;
   marketValue: number;
-  return1m: number;
-  return1y: number;
+  unrealizedReturnRate: number;
 }

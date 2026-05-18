@@ -1,7 +1,6 @@
 import type { BrokerageAccount } from "./account";
 import type { CurrencyCode, Timestamp, TradeSide } from "./common";
 import type { DividendMode, FundTransactionType } from "./fund";
-import type { BoardLotType } from "./stock";
 
 export interface BaseTransaction {
   /** 每筆交易唯一識別碼 */
@@ -12,8 +11,6 @@ export interface BaseTransaction {
   account_id: string;
   /** 交易日期（Unix timestamp） */
   trade_date: Timestamp;
-  /** 交割日期（Unix timestamp） */
-  settle_date?: Timestamp;
   /** 買進或賣出 */
   side: TradeSide;
   /** 交易數量（股票股數 / 基金單位數） */
@@ -43,13 +40,13 @@ export interface StockTransaction extends BaseTransaction {
   symbol: string;
   /** 交易市場，例如 TWSE、NASDAQ */
   market?: string;
-  /** 零股或整股 */
-  board_lot_type?: BoardLotType;
 }
 
 export interface FundTransaction extends BaseTransaction {
   /** 基金代碼 */
   fund_code: string;
+  /** 交割日期（Unix timestamp） */
+  settle_date?: Timestamp;
   /** 淨值日（Unix timestamp） */
   nav_date?: Timestamp;
   /** 申購 / 贖回 / 轉入 / 轉出 */

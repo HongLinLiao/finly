@@ -1,19 +1,16 @@
 import createCashAccountMovementRecord from "@/lib/supabase/cash-account/createCashAccountMovement";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
-import type { CurrencyCode, DividendMode, FundTransactionType, TradeSide } from "@/types";
+import type { CurrencyCode, TradeSide } from "@/types";
 
-export interface CreateFundTransactionRecordInput {
+export interface CreateStockTransactionRecordInput {
   userUid: string;
   accountId: string;
   cashAccountId: string;
   tradeDate: string;
-  settleDate?: string | null;
   side: TradeSide;
-  fundCode: string;
-  navDate?: string | null;
-  transactionType?: FundTransactionType | null;
-  dividendMode?: DividendMode | null;
+  symbol: string;
+  market?: string | null;
   quantity: number;
   unitPrice: number;
   grossAmount: number;
@@ -25,7 +22,7 @@ export interface CreateFundTransactionRecordInput {
   note?: string | null;
 }
 
-async function createFundTransactionRecord(input: CreateFundTransactionRecordInput) {
+async function createStockTransactionRecord(input: CreateStockTransactionRecordInput) {
   const supabase = getSupabaseAdminClient();
 
   const { data: brokerageAccount, error: brokerageAccountError } = await supabase
@@ -68,17 +65,14 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
   }
 
   const { data, error } = await supabase
-    .from("fund_transactions")
+    .from("stock_transactions")
     .insert({
       user_uid: input.userUid,
       account_id: input.accountId,
       trade_date: input.tradeDate,
-      settle_date: input.settleDate ?? null,
       side: input.side,
-      fund_code: input.fundCode,
-      nav_date: input.navDate ?? null,
-      transaction_type: input.transactionType ?? null,
-      dividend_mode: input.dividendMode ?? null,
+      symbol: input.symbol,
+      market: input.market ?? null,
       quantity: input.quantity,
       unit_price: input.unitPrice,
       gross_amount: input.grossAmount,
@@ -92,31 +86,21 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
     .single();
 
   if (error) {
-    throw new Error(`Failed to create fund transaction: ${error.message}`);
+    throw new Error(`Failed to create stock transaction: ${error.message}`);
   }
-
-  const method =
-    input.transactionType === "redeem"
-      ? "fund-redeem-settlement"
-      : input.transactionType === "switch-in"
-        ? "fund-switch-in-settlement"
-        : input.transactionType === "switch-out"
-          ? "fund-switch-out-settlement"
-          : "fund-subscribe-settlement";
 
   await createCashAccountMovementRecord({
     userUid: input.userUid,
     brokerageAccountId: input.accountId,
     cashAccountId: input.cashAccountId,
     occurredAt: input.tradeDate,
-    settleAt: input.settleDate,
     direction: input.side === "buy" ? "out" : "in",
-    method,
+    method: input.side === "buy" ? "stock-buy-settlement" : "stock-sell-settlement",
     amount: cashSettlementAmount,
     currency: cashAccount.currency,
-    relatedAssetType: "fund",
-    fundTransactionId: data.id,
-    relatedAssetCode: input.fundCode,
+    relatedAssetType: "stock",
+    stockTransactionId: data.id,
+    relatedAssetCode: input.symbol,
     note:
       cashAccount.currency === input.currency
         ? input.note
@@ -126,4 +110,4 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
   return data;
 }
 
-export default createFundTransactionRecord;
+export default createStockTransactionRecord;

@@ -5,11 +5,6 @@ export const sideLabels: Record<TradeSide, string> = {
   sell: "賣出",
 };
 
-export const boardLotLabels: Record<"regular" | "odd", string> = {
-  regular: "整股",
-  odd: "零股",
-};
-
 const pad2 = (value: number) => value.toString().padStart(2, "0");
 
 export const formatDateTime = (timestamp?: number) => {

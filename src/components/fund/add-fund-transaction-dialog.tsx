@@ -113,6 +113,10 @@ function AddFundTransactionForm({
   const selectedCashAccount = cashAccountOptions.find(item => item.id === selectedCashAccountId);
   const side: TradeSide =
     transactionType === "redeem" || transactionType === "switch-out" ? "sell" : "buy";
+  const hasSettlementCurrencyMismatch =
+    !!selectedCashAccount &&
+    !!selectedFund &&
+    selectedCashAccount.currency !== selectedFund.currency;
 
   useEffect(() => {
     if (!state.success) return;
@@ -124,6 +128,7 @@ function AddFundTransactionForm({
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
       <input type="hidden" name="accountId" value={selectedCashAccount?.brokerageAccountId ?? ""} />
+      <input type="hidden" name="cashAccountId" value={selectedCashAccount?.id ?? ""} />
       <input type="hidden" name="fundCode" value={selectedFund?.fundCode ?? ""} />
       <input type="hidden" name="side" value={side} />
       <input
@@ -134,7 +139,7 @@ function AddFundTransactionForm({
 
       <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm sm:col-span-2">
-          <span className="text-muted-foreground dark:text-zinc-500">
+          <span className="text-muted-foreground dark:text-zinc-100">
             基金
             <RequiredMark />
           </span>
@@ -214,7 +219,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm sm:col-span-2">
-          <span className="text-muted-foreground dark:text-zinc-500">
+          <span className="text-muted-foreground dark:text-zinc-100">
             資金戶
             <RequiredMark />
           </span>
@@ -236,7 +241,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">
+          <span className="text-muted-foreground dark:text-zinc-100">
             交易日期
             <RequiredMark />
           </span>
@@ -244,7 +249,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">淨值日</span>
+          <span className="text-muted-foreground dark:text-zinc-100">淨值日</span>
           <Input
             name="navDate"
             type="date"
@@ -253,7 +258,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">交易類型</span>
+          <span className="text-muted-foreground dark:text-zinc-100">交易類型</span>
           <Select
             name="transactionType"
             value={transactionType}
@@ -272,7 +277,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">配息方式</span>
+          <span className="text-muted-foreground dark:text-zinc-100">配息方式</span>
           <Select name="dividendMode" defaultValue="accumulation">
             <SelectTrigger className="w-full">
               <SelectValue />
@@ -303,7 +308,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">
+          <span className="text-muted-foreground dark:text-zinc-100">
             單位數
             <RequiredMark />
           </span>
@@ -311,7 +316,7 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">
+          <span className="text-muted-foreground dark:text-zinc-100">
             單位淨值
             <RequiredMark />
           </span>
@@ -327,7 +332,9 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">原始成交金額</span>
+          <span className="text-muted-foreground dark:text-zinc-100">
+            原始成交金額（{selectedFund?.currency ?? "基金幣別"}）
+          </span>
           <Input
             name="grossAmount"
             type="number"
@@ -338,7 +345,9 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">實際入帳/扣款</span>
+          <span className="text-muted-foreground dark:text-zinc-100">
+            交易淨額（{selectedFund?.currency ?? "基金幣別"}）
+          </span>
           <Input
             name="netAmount"
             type="number"
@@ -349,18 +358,43 @@ function AddFundTransactionForm({
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">手續費</span>
+          <span className="text-muted-foreground dark:text-zinc-100">
+            資金戶實際入帳/扣款
+            {hasSettlementCurrencyMismatch ? <RequiredMark /> : null}
+          </span>
+          <Input
+            name="cashSettlementAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            required={hasSettlementCurrencyMismatch}
+            placeholder={
+              selectedCashAccount
+                ? `${selectedCashAccount.currency} 金額；同幣別不填會沿用交易淨額`
+                : "選擇資金戶後顯示幣別"
+            }
+          />
+          {hasSettlementCurrencyMismatch ? (
+            <p className="text-xs leading-relaxed text-muted-foreground dark:text-zinc-500">
+              基金以 {selectedFund?.currency} 交易，資金戶以 {selectedCashAccount?.currency}{" "}
+              入扣帳，請填實際扣款或入帳金額。
+            </p>
+          ) : null}
+        </label>
+
+        <label className="space-y-2 text-sm">
+          <span className="text-muted-foreground dark:text-zinc-100">手續費</span>
           <Input name="fee" type="number" min="0" step="0.01" />
         </label>
 
         <label className="space-y-2 text-sm">
-          <span className="text-muted-foreground dark:text-zinc-500">稅額</span>
+          <span className="text-muted-foreground dark:text-zinc-100">稅額</span>
           <Input name="tax" type="number" min="0" step="0.01" />
         </label>
       </div>
 
       <label className="space-y-2 text-sm">
-        <span className="text-muted-foreground dark:text-zinc-500">備註</span>
+        <span className="text-muted-foreground dark:text-zinc-100">備註</span>
         <Textarea name="note" placeholder="可記錄申購批次、轉換原因或備註" />
       </label>
 

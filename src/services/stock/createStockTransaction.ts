@@ -9,17 +9,17 @@ import {
   normalizeNumber,
   normalizeOptionalText,
 } from "@/lib/form";
-import createFundTransactionRecord from "@/lib/supabase/fund/createFundTransaction";
-import { isDividendMode } from "@/types/fund";
+import { findStockOption } from "@/lib/stock-options";
+import createStockTransactionRecord from "@/lib/supabase/stock/createStockTransaction";
 
-import type { DividendMode, FundTransactionType, TradeSide } from "@/types";
+import type { TradeSide } from "@/types";
 
-export type CreateFundTransactionState = {
+export type CreateStockTransactionState = {
   success: boolean;
   message: string;
 };
 
-const INITIAL_ERROR_STATE: CreateFundTransactionState = {
+const INITIAL_ERROR_STATE: CreateStockTransactionState = {
   success: false,
   message: "",
 };
@@ -28,10 +28,10 @@ function calculateNetAmount(side: TradeSide, grossAmount: number, fee: number, t
   return side === "sell" ? grossAmount - fee - tax : grossAmount + fee + tax;
 }
 
-export async function createFundTransaction(
-  _previousState: CreateFundTransactionState,
+export async function createStockTransaction(
+  _previousState: CreateStockTransactionState,
   formData: FormData
-): Promise<CreateFundTransactionState> {
+): Promise<CreateStockTransactionState> {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -43,15 +43,11 @@ export async function createFundTransaction(
 
   const accountId = normalizeOptionalText(formData.get("accountId"));
   const cashAccountId = normalizeOptionalText(formData.get("cashAccountId"));
-  const fundCode = normalizeOptionalText(formData.get("fundCode"))?.toUpperCase() ?? null;
-  const tradeDate = normalizeDate(formData.get("tradeDate"));
-  const settleDate = normalizeDate(formData.get("settleDate"));
-  const navDate = normalizeDate(formData.get("navDate"));
+  const symbol = normalizeOptionalText(formData.get("symbol"))?.toUpperCase() ?? null;
+  const market = normalizeOptionalText(formData.get("market"))?.toUpperCase() ?? null;
+  const yahooSymbol = normalizeOptionalText(formData.get("yahooSymbol"))?.toUpperCase() ?? null;
   const side = normalizeOptionalText(formData.get("side")) as TradeSide | null;
-  const transactionType = normalizeOptionalText(
-    formData.get("transactionType")
-  ) as FundTransactionType | null;
-  const dividendMode = normalizeOptionalText(formData.get("dividendMode")) as DividendMode | null;
+  const tradeDate = normalizeDate(formData.get("tradeDate"));
   const quantity = normalizeNumber(formData.get("quantity"));
   const unitPrice = normalizeNumber(formData.get("unitPrice"));
   const grossAmountInput = normalizeNumber(formData.get("grossAmount"));
@@ -65,7 +61,9 @@ export async function createFundTransaction(
   if (
     !accountId ||
     !cashAccountId ||
-    !fundCode ||
+    !symbol ||
+    !market ||
+    !yahooSymbol ||
     !tradeDate ||
     !side ||
     !quantity ||
@@ -74,7 +72,7 @@ export async function createFundTransaction(
   ) {
     return {
       ...INITIAL_ERROR_STATE,
-      message: "請填寫基金、資金戶、交易日期、單位數、單位淨值與幣別。",
+      message: "請填寫資金戶、股票標的、交易日期、數量、單價與幣別。",
     };
   }
 
@@ -85,13 +83,6 @@ export async function createFundTransaction(
     };
   }
 
-  if (dividendMode && !isDividendMode(dividendMode)) {
-    return {
-      ...INITIAL_ERROR_STATE,
-      message: "配息方式不正確。",
-    };
-  }
-
   if (currency === "INVALID") {
     return {
       ...INITIAL_ERROR_STATE,
@@ -99,10 +90,24 @@ export async function createFundTransaction(
     };
   }
 
+  const stockOption = await findStockOption({
+    symbol,
+    market,
+    currency,
+    yahooSymbol,
+  });
+
+  if (!stockOption) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "股票標的資料不正確，請重新選擇股票。",
+    };
+  }
+
   if (quantity <= 0 || unitPrice < 0 || fee < 0 || tax < 0) {
     return {
       ...INITIAL_ERROR_STATE,
-      message: "單位數、單位淨值與費用不可為負數。",
+      message: "數量、單價與費用不可為負數。",
     };
   }
 
@@ -117,17 +122,14 @@ export async function createFundTransaction(
   }
 
   try {
-    await createFundTransactionRecord({
+    await createStockTransactionRecord({
       userUid: user.uid,
       accountId,
       cashAccountId,
-      fundCode,
+      symbol,
+      market,
       tradeDate,
-      settleDate,
       side,
-      navDate,
-      transactionType,
-      dividendMode,
       quantity,
       unitPrice,
       grossAmount,
@@ -139,18 +141,18 @@ export async function createFundTransaction(
       note,
     });
   } catch (error) {
-    console.error("Failed to create fund transaction:", error);
+    console.error("Failed to create stock transaction:", error);
 
     return {
       ...INITIAL_ERROR_STATE,
-      message: "新增基金交易失敗，請稍後再試。",
+      message: "新增股票交易失敗，請稍後再試。",
     };
   }
 
-  revalidatePath("/funds");
+  revalidatePath("/stocks");
 
   return {
     success: true,
-    message: "已新增基金交易。",
+    message: "已新增股票交易。",
   };
 }

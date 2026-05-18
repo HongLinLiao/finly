@@ -5,25 +5,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 
-import { stockAccounts } from "./stock-mock";
-import {
-  boardLotLabels,
-  formatCurrency,
-  formatDateTime,
-  formatNumber,
-  sideLabels,
-} from "./stock-transaction-data";
+import { formatCurrency, formatDateTime, formatNumber, sideLabels } from "./stock-transaction-data";
 
-import type { StockTransaction } from "@/types";
+import type { StockPriceQuote } from "@/lib/stock-price";
+import type { BrokerageAccount, StockTransaction } from "@/types";
 
 interface StockTransactionItemProps {
   item: StockTransaction;
+  accounts: BrokerageAccount[];
+  latestQuote?: StockPriceQuote;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function StockTransactionItem({ item, open, onOpenChange }: StockTransactionItemProps) {
-  const account = stockAccounts.find(accountItem => accountItem.id === item.account_id);
+export function StockTransactionItem({
+  item,
+  accounts,
+  latestQuote,
+  open,
+  onOpenChange,
+}: StockTransactionItemProps) {
+  const account = accounts.find(accountItem => accountItem.id === item.account_id);
   const sideIsBuy = item.side === "buy";
 
   return (
@@ -66,9 +68,6 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
                   </p>
 
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
-                      {boardLotLabels[item.board_lot_type ?? "regular"]}
-                    </span>
                     {item.market ? (
                       <span className="inline-flex items-center rounded-3xl border border-emerald-200/80 bg-emerald-50/70 px-2 py-0.5 text-xs font-medium text-foreground/80 dark:border-emerald-500/25 dark:bg-emerald-950/20 dark:text-zinc-300">
                         {item.market}
@@ -101,8 +100,14 @@ export function StockTransactionItem({ item, open, onOpenChange }: StockTransact
               <DetailField label="交易編號" value={item.id} />
               <DetailField label="市場" value={item.market ?? "—"} />
               <DetailField
-                label="交割日"
-                value={item.settle_date ? formatDateTime(item.settle_date) : "—"}
+                label="最新收盤價"
+                value={
+                  latestQuote?.close
+                    ? `${formatCurrency(latestQuote.close, latestQuote.currency)}${
+                        latestQuote.priceDate ? ` · ${latestQuote.priceDate}` : ""
+                      }`
+                    : "—"
+                }
               />
               <DetailField
                 label="成交金額"

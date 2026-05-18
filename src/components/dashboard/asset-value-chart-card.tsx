@@ -10,7 +10,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-import type { AssetValueItem } from "@/app/mock";
+import type { AssetValueItem } from "@/types/dashboard";
 
 interface AssetValueChartCardProps {
   title: string;
@@ -23,6 +23,10 @@ function formatCurrency(value: number, currency: string) {
     currency,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatPercent(value: number) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) {
@@ -50,6 +54,7 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
     code: item.code,
     value: item.marketValue,
     currency: item.currency,
+    unrealizedReturnRate: item.unrealizedReturnRate,
     accountValues: item.accountValues,
     fill: `var(--color-slice${index})`,
     ratio: total > 0 ? (item.marketValue / total) * 100 : 0,
@@ -74,6 +79,7 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
                       | {
                           payload?: {
                             currency?: string;
+                            unrealizedReturnRate?: number;
                             accountValues?: { accountName: string; marketValue: number }[];
                           };
                         }
@@ -81,6 +87,11 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
 
                     const currency = item?.payload?.currency ?? "TWD";
                     const totalValue = Number(value);
+                    const unrealizedReturnRate = item?.payload?.unrealizedReturnRate ?? 0;
+                    const returnColor =
+                      unrealizedReturnRate >= 0
+                        ? "text-emerald-600 dark:text-emerald-300"
+                        : "text-rose-500";
                     const accountValues = [...(item?.payload?.accountValues ?? [])].sort(
                       (a, b) => b.marketValue - a.marketValue
                     );
@@ -91,6 +102,14 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
                           <span className="text-muted-foreground dark:text-zinc-400">{name}</span>
                           <span className="font-mono text-foreground dark:text-zinc-100">
                             {formatCurrency(totalValue, currency)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground dark:text-zinc-400">
+                            未實現報酬率
+                          </span>
+                          <span className={`font-mono ${returnColor}`}>
+                            {formatPercent(unrealizedReturnRate)}
                           </span>
                         </div>
                         <div className="space-y-1 border-t border-border/80 pt-1.5">
@@ -145,23 +164,33 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
         </ChartContainer>
 
         <div className="space-y-2">
-          {chartData.map(item => (
-            <div
-              key={item.key}
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-emerald-200/80 bg-emerald-50/70 px-3 py-2 text-xs dark:border-emerald-500/25 dark:bg-emerald-950/20"
-            >
-              <p className="truncate text-foreground/90 dark:text-zinc-300">
-                {item.name}{" "}
-                <span className="text-muted-foreground dark:text-zinc-500">{item.code}</span>
-              </p>
-              <p className="font-mono text-foreground/85 dark:text-zinc-300">
-                {item.ratio.toFixed(1)}%
-              </p>
-              <p className="font-mono text-foreground dark:text-zinc-100">
-                {formatCurrency(item.value, item.currency)}
-              </p>
-            </div>
-          ))}
+          {chartData.map(item => {
+            const returnColor =
+              item.unrealizedReturnRate >= 0
+                ? "text-emerald-600 dark:text-emerald-300"
+                : "text-rose-500";
+
+            return (
+              <div
+                key={item.key}
+                className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 rounded-xl border border-emerald-200/80 bg-emerald-50/70 px-3 py-2 text-xs dark:border-emerald-500/25 dark:bg-emerald-950/20"
+              >
+                <p className="truncate text-foreground/90 dark:text-zinc-300">
+                  {item.name}{" "}
+                  <span className="text-muted-foreground dark:text-zinc-500">{item.code}</span>
+                </p>
+                <p className="font-mono text-foreground/85 dark:text-zinc-300">
+                  {item.ratio.toFixed(1)}%
+                </p>
+                <p className={`font-mono ${returnColor}`}>
+                  {formatPercent(item.unrealizedReturnRate)}
+                </p>
+                <p className="font-mono text-foreground dark:text-zinc-100">
+                  {formatCurrency(item.value, item.currency)}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

@@ -7,7 +7,6 @@ export interface CreateCashAccountMovementInput {
   brokerageAccountId: string;
   cashAccountId: string;
   occurredAt: string;
-  settleAt?: string | null;
   direction: CashMovementDirection;
   method: CashMovementMethod;
   amount: number;
@@ -29,7 +28,6 @@ async function createCashAccountMovementRecord(input: CreateCashAccountMovementI
       brokerage_account_id: input.brokerageAccountId,
       cash_account_id: input.cashAccountId,
       occurred_at: input.occurredAt,
-      settle_at: input.settleAt ?? null,
       direction: input.direction,
       method: input.method,
       amount: input.amount,

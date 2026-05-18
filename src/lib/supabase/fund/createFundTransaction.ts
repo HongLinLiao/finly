@@ -8,7 +8,6 @@ export interface CreateFundTransactionRecordInput {
   accountId: string;
   cashAccountId: string;
   tradeDate: string;
-  settleDate?: string | null;
   side: TradeSide;
   fundCode: string;
   navDate?: string | null;
@@ -73,7 +72,6 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
       user_uid: input.userUid,
       account_id: input.accountId,
       trade_date: input.tradeDate,
-      settle_date: input.settleDate ?? null,
       side: input.side,
       fund_code: input.fundCode,
       nav_date: input.navDate ?? null,
@@ -109,7 +107,6 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
     brokerageAccountId: input.accountId,
     cashAccountId: input.cashAccountId,
     occurredAt: input.tradeDate,
-    settleAt: input.settleDate,
     direction: input.side === "buy" ? "out" : "in",
     method,
     amount: cashSettlementAmount,

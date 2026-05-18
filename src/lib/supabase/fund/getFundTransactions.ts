@@ -18,7 +18,6 @@ async function getFundTransactionRecords(userUid: string) {
   return (data ?? []).map(item => ({
     ...item,
     trade_date: new Date(item.trade_date).getTime() / 1000,
-    settle_date: item.settle_date ? new Date(item.settle_date).getTime() / 1000 : undefined,
     nav_date: item.nav_date ? new Date(item.nav_date).getTime() / 1000 : undefined,
     created_at: new Date(item.created_at).getTime() / 1000,
     updated_at: new Date(item.updated_at).getTime() / 1000,

@@ -45,7 +45,6 @@ export async function createFundTransaction(
   const cashAccountId = normalizeOptionalText(formData.get("cashAccountId"));
   const fundCode = normalizeOptionalText(formData.get("fundCode"))?.toUpperCase() ?? null;
   const tradeDate = normalizeDate(formData.get("tradeDate"));
-  const settleDate = normalizeDate(formData.get("settleDate"));
   const navDate = normalizeDate(formData.get("navDate"));
   const side = normalizeOptionalText(formData.get("side")) as TradeSide | null;
   const transactionType = normalizeOptionalText(
@@ -123,7 +122,6 @@ export async function createFundTransaction(
       cashAccountId,
       fundCode,
       tradeDate,
-      settleDate,
       side,
       navDate,
       transactionType,

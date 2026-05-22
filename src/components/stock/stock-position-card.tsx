@@ -1,23 +1,79 @@
-import { BarChart3, ChevronDown } from "lucide-react";
+"use client";
 
+import {
+  BarChart3,
+  ChevronDown,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
+
+import { EditStockTransactionDialog } from "@/components/stock/edit-stock-transaction-dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { formatPercent } from "@/lib/format";
+import {
+  deleteStockTransaction,
+  type DeleteStockTransactionState,
+} from "@/services/stock/deleteStockTransaction";
 
 import { formatCurrency, formatNumber } from "./stock-transaction-data";
 
 import type { StockPosition } from "./stock-list-data";
+import type { BrokerageAccountWithCashAccounts } from "@/services/brokerage/getBrokerageAccounts";
+import type { StockTransaction } from "@/types";
 import type { ReactNode } from "react";
 
 interface StockPositionCardProps {
   item: StockPosition;
+  accounts: BrokerageAccountWithCashAccounts[];
+  transactions: StockTransaction[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const StockPositionCard = ({ item, open, onOpenChange }: StockPositionCardProps) => {
+const deleteInitialState: DeleteStockTransactionState = {
+  success: false,
+  message: "",
+};
+
+function formatTransactionDate(value: number) {
+  return new Intl.DateTimeFormat("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value * 1000));
+}
+
+export const StockPositionCard = ({
+  item,
+  accounts,
+  transactions,
+  open,
+  onOpenChange,
+}: StockPositionCardProps) => {
   const pnlColor =
     item.unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
@@ -109,12 +165,175 @@ export const StockPositionCard = ({ item, open, onOpenChange }: StockPositionCar
                 }
               />
             </div>
+
+            <div className="mt-4 border-t pt-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-foreground dark:text-zinc-100">交易紀錄</p>
+                <Badge variant="outline">{transactions.length} 筆</Badge>
+              </div>
+
+              <div className="space-y-2">
+                {transactions.map(transaction => (
+                  <StockTransactionRow
+                    key={transaction.id}
+                    transaction={transaction}
+                    accounts={accounts}
+                  />
+                ))}
+              </div>
+            </div>
           </CollapsibleContent>
         </CardContent>
       </Card>
     </Collapsible>
   );
 };
+
+function getAccountLabel(
+  accounts: BrokerageAccountWithCashAccounts[],
+  transaction: StockTransaction
+) {
+  const account = accounts.find(item => item.id === transaction.account_id);
+  const cashAccount = account?.securities_cash_accounts.find(
+    item => item.id === transaction.cash_account_id
+  );
+
+  if (!account) return "未知證券戶";
+
+  return cashAccount
+    ? `${account.account_name} · ${cashAccount.account_name || cashAccount.currency}`
+    : account.account_name;
+}
+
+function StockTransactionRow({
+  transaction,
+  accounts,
+}: {
+  transaction: StockTransaction;
+  accounts: BrokerageAccountWithCashAccounts[];
+}) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const isSell = transaction.side === "sell";
+  const Icon = isSell ? TrendingDown : TrendingUp;
+  const signedAmount = isSell ? transaction.net_amount : -transaction.net_amount;
+
+  return (
+    <>
+      <EditStockTransactionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        accounts={accounts}
+        transaction={transaction}
+      />
+      <DeleteStockTransactionDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        transaction={transaction}
+      />
+
+      <div className="flex items-start gap-3 rounded-2xl border bg-secondary/40 px-3 py-2.5 text-sm">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground">
+          <Icon className="size-4" />
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-foreground dark:text-zinc-50">
+              {isSell ? "賣出" : "買進"}
+            </span>
+            <Badge variant="outline">{formatTransactionDate(transaction.trade_date)}</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground dark:text-zinc-500">
+            {getAccountLabel(accounts, transaction)}
+          </p>
+          <p className="text-xs text-muted-foreground dark:text-zinc-500">
+            {formatNumber(transaction.quantity, 4)} 股 · 單價{" "}
+            {formatCurrency(transaction.unit_price, transaction.currency)}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-start gap-1">
+          <p className="pt-1 text-right font-semibold text-foreground dark:text-zinc-50">
+            {formatCurrency(signedAmount, transaction.currency)}
+          </p>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`${formatTransactionDate(transaction.trade_date)} 股票交易操作`}
+              >
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+                <Pencil className="size-4" />
+                編輯
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
+                <Trash2 className="size-4" />
+                刪除
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DeleteStockTransactionDialog({
+  open,
+  onOpenChange,
+  transaction,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  transaction: StockTransaction;
+}) {
+  const [state, formAction, isPending] = useActionState(deleteStockTransaction, deleteInitialState);
+
+  useEffect(() => {
+    if (!state.success) return;
+
+    onOpenChange(false);
+  }, [onOpenChange, state.success]);
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <form action={formAction} className="space-y-5">
+          <input type="hidden" name="id" value={transaction.id} />
+
+          <AlertDialogHeader>
+            <AlertDialogTitle>刪除這筆股票交易？</AlertDialogTitle>
+            <AlertDialogDescription>
+              這會刪除此筆股票交易與對應的資金異動紀錄。此動作無法復原。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {state.message && !state.success ? (
+            <p className="rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {state.message}
+            </p>
+          ) : null}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button" disabled={isPending}>
+              取消
+            </AlertDialogCancel>
+            <Button type="submit" variant="destructive" disabled={isPending}>
+              {isPending ? "刪除中" : "刪除"}
+            </Button>
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 function DetailField({
   label,

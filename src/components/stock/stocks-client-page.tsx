@@ -75,7 +75,6 @@ function buildStockPositions(transactions: StockTransaction[], quotes: StockPric
   });
 
   return Array.from(positionMap.entries())
-    .filter(([, position]) => position.quantity > 0)
     .map<StockPosition>(([key, position]) => {
       const quote = quoteMap.get(key);
       const marketValue = quote?.close ? position.quantity * quote.close : position.costAmount;
@@ -109,16 +108,36 @@ export function StocksClientPage({
     () => buildStockPositions(transactions, quotes),
     [quotes, transactions]
   );
+  const activePositions = useMemo(
+    () => positions.filter(position => position.quantity > 0),
+    [positions]
+  );
+  const transactionsByStockKey = useMemo(() => {
+    const map = new Map<string, StockTransaction[]>();
+
+    transactions.forEach(transaction => {
+      const key = getStockPriceKey(transaction);
+      const items = map.get(key) ?? [];
+      items.push(transaction);
+      map.set(key, items);
+    });
+
+    map.forEach(items => {
+      items.sort((a, b) => b.trade_date - a.trade_date || b.created_at - a.created_at);
+    });
+
+    return map;
+  }, [transactions]);
 
   const summary = useMemo(() => {
-    const totals = positions.reduce(
+    const totals = activePositions.reduce(
       (acc, item) => ({
         marketValue: acc.marketValue + toTwdValue(item.marketValue, item.currency, ratesToTwd),
         costAmount: acc.costAmount + toTwdValue(item.costAmount, item.currency, ratesToTwd),
       }),
       { marketValue: 0, costAmount: 0 }
     );
-    const count = positions.length;
+    const count = activePositions.length;
     const unrealizedPnl = totals.marketValue - totals.costAmount;
     const unrealizedReturnRate =
       totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
@@ -129,7 +148,7 @@ export function StocksClientPage({
       unrealizedPnl,
       unrealizedReturnRate,
     };
-  }, [positions, ratesToTwd]);
+  }, [activePositions, ratesToTwd]);
 
   return (
     <section className="space-y-5">
@@ -154,6 +173,8 @@ export function StocksClientPage({
               onOpenChange={open => {
                 setOpenedRows(prev => ({ ...prev, [item.key]: open }));
               }}
+              accounts={accounts}
+              transactions={transactionsByStockKey.get(item.key) ?? []}
             />
           ))
         )}

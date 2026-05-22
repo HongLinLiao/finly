@@ -32,27 +32,48 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
-  createStockTransaction,
-  type CreateStockTransactionState,
-} from "@/services/stock/createStockTransaction";
+  updateStockTransaction,
+  type UpdateStockTransactionState,
+} from "@/services/stock/updateStockTransaction";
 
 import { Separator } from "../ui/separator";
 import { RequiredMark } from "../util/form/required-mark";
 
 import type { BrokerageAccountWithCashAccounts } from "@/services/brokerage/getBrokerageAccounts";
-import type { TradeSide } from "@/types";
+import type { StockTransaction, TradeSide } from "@/types";
 import type { StockOption } from "@/types/stock-option";
 
-interface AddStockTransactionDialogProps {
+interface EditStockTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: BrokerageAccountWithCashAccounts[];
+  transaction: StockTransaction;
 }
 
-const initialState: CreateStockTransactionState = {
+const initialState: UpdateStockTransactionState = {
   success: false,
   message: "",
 };
+
+function toDateInputValue(value: number) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value * 1000));
+}
+
+function toStockOption(transaction: StockTransaction): StockOption {
+  return {
+    symbol: transaction.symbol,
+    name: transaction.symbol,
+    market: transaction.market ?? "",
+    currency: transaction.currency,
+    exchangeName: transaction.market ?? "",
+    yahooSymbol: transaction.symbol,
+  };
+}
 
 function StockOptionContent({ stock }: { stock: StockOption }) {
   return (
@@ -68,61 +89,27 @@ function StockOptionContent({ stock }: { stock: StockOption }) {
   );
 }
 
-export function AddStockTransactionDialog({
-  open,
-  onOpenChange,
+function EditStockTransactionForm({
   accounts,
-}: AddStockTransactionDialogProps) {
-  const [formKey, setFormKey] = useState(0);
-
-  function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
-      setFormKey(key => key + 1);
-    }
-
-    onOpenChange(nextOpen);
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader className="space-y-2 pb-1">
-          <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="size-4 text-primary" />
-            新增股票交易明細
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            新增單筆股票交易紀錄，並建立對應資金異動。
-          </DialogDescription>
-        </DialogHeader>
-
-        <AddStockTransactionForm
-          key={formKey}
-          accounts={accounts}
-          onSuccess={() => onOpenChange(false)}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddStockTransactionForm({
-  accounts,
+  transaction,
   onSuccess,
 }: {
   accounts: BrokerageAccountWithCashAccounts[];
+  transaction: StockTransaction;
   onSuccess: () => void;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, isPending] = useActionState(createStockTransaction, initialState);
-  const [selectedCashAccountId, setSelectedCashAccountId] = useState("");
-  const [selectedStock, setSelectedStock] = useState<StockOption | null>(null);
+  const [state, formAction, isPending] = useActionState(updateStockTransaction, initialState);
+  const [selectedCashAccountId, setSelectedCashAccountId] = useState(
+    transaction.cash_account_id ?? ""
+  );
+  const [selectedStock, setSelectedStock] = useState<StockOption>(() => toStockOption(transaction));
   const [stockSearch, setStockSearch] = useState("");
   const [stockSearchResults, setStockSearchResults] = useState<StockOption[]>([]);
   const [isStockSearching, setIsStockSearching] = useState(false);
   const [stockSearchError, setStockSearchError] = useState("");
   const [isStockSearchOpen, setIsStockSearchOpen] = useState(false);
-  const [side, setSide] = useState<TradeSide>("buy");
+  const [side, setSide] = useState<TradeSide>(transaction.side);
 
   const cashAccountOptions = useMemo(
     () =>
@@ -144,10 +131,10 @@ function AddStockTransactionForm({
     !!selectedCashAccount &&
     !!selectedStock &&
     selectedCashAccount.currency !== selectedStock.currency;
+
   useEffect(() => {
     if (!state.success) return;
 
-    formRef.current?.reset();
     onSuccess();
   }, [onSuccess, state.success]);
 
@@ -199,13 +186,14 @@ function AddStockTransactionForm({
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
+      <input type="hidden" name="id" value={transaction.id} />
       <input type="hidden" name="accountId" value={selectedCashAccount?.brokerageAccountId ?? ""} />
       <input type="hidden" name="cashAccountId" value={selectedCashAccount?.id ?? ""} />
-      <input type="hidden" name="symbol" value={selectedStock?.symbol ?? ""} />
-      <input type="hidden" name="market" value={selectedStock?.market ?? ""} />
-      <input type="hidden" name="yahooSymbol" value={selectedStock?.yahooSymbol ?? ""} />
+      <input type="hidden" name="symbol" value={selectedStock.symbol} />
+      <input type="hidden" name="market" value={selectedStock.market} />
+      <input type="hidden" name="yahooSymbol" value={selectedStock.yahooSymbol} />
       <input type="hidden" name="side" value={side} />
-      <input type="hidden" name="currency" value={selectedStock?.currency ?? ""} />
+      <input type="hidden" name="currency" value={selectedStock.currency} />
 
       <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm sm:col-span-2">
@@ -249,15 +237,9 @@ function AddStockTransactionForm({
                 aria-expanded={isStockSearchOpen}
                 className="h-auto min-h-9 w-full justify-between gap-3 rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
               >
-                {selectedStock ? (
-                  <span className="flex min-w-0 flex-1 items-start gap-2">
-                    <StockOptionContent stock={selectedStock} />
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground dark:text-zinc-400">
-                    搜尋股票代號或名稱
-                  </span>
-                )}
+                <span className="flex min-w-0 flex-1 items-start gap-2">
+                  <StockOptionContent stock={selectedStock} />
+                </span>
                 <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
               </Button>
             </PopoverTrigger>
@@ -304,7 +286,7 @@ function AddStockTransactionForm({
                         <Check
                           className={cn(
                             "ml-auto size-4 shrink-0",
-                            selectedStock?.yahooSymbol === stock.yahooSymbol
+                            selectedStock.yahooSymbol === stock.yahooSymbol
                               ? "opacity-100"
                               : "opacity-0"
                           )}
@@ -339,7 +321,12 @@ function AddStockTransactionForm({
             交易日期
             <RequiredMark />
           </span>
-          <Input name="tradeDate" required type="date" />
+          <Input
+            name="tradeDate"
+            required
+            type="date"
+            defaultValue={toDateInputValue(transaction.trade_date)}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
@@ -353,11 +340,8 @@ function AddStockTransactionForm({
             type="number"
             min="0.000001"
             step="0.000001"
-            placeholder="例如 1000、233、1.5"
+            defaultValue={transaction.quantity}
           />
-          <p className="text-xs leading-relaxed text-muted-foreground dark:text-zinc-500">
-            請輸入實際股數。台股 1 張請填 1000，零股 10 股請填 10；海外股票請填實際成交股數。
-          </p>
         </label>
 
         <label className="space-y-2 text-sm">
@@ -365,37 +349,62 @@ function AddStockTransactionForm({
             單價
             <RequiredMark />
           </span>
-          <Input name="unitPrice" required type="number" min="0" step="0.000001" />
+          <Input
+            name="unitPrice"
+            required
+            type="number"
+            min="0"
+            step="0.000001"
+            defaultValue={transaction.unit_price}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">
-            原始成交金額（{selectedStock?.currency ?? "標的幣別"}）
+            原始成交金額（{selectedStock.currency}）
           </span>
           <Input
             name="grossAmount"
             type="number"
             min="0"
             step="0.01"
-            placeholder="不填會自動用數量 x 單價"
+            defaultValue={transaction.gross_amount}
           />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">手續費</span>
-          <Input name="fee" type="number" min="0" step="0.01" />
+          <Input
+            name="fee"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={transaction.fee ?? ""}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">稅額</span>
-          <Input name="tax" type="number" min="0" step="0.01" />
+          <Input
+            name="tax"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={transaction.tax ?? ""}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">
-            交易淨額（{selectedStock?.currency ?? "標的幣別"}）
+            交易淨額（{selectedStock.currency}）
           </span>
-          <Input name="netAmount" type="number" min="0" step="0.01" placeholder="不填會自動計算" />
+          <Input
+            name="netAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={transaction.net_amount}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
@@ -409,24 +418,23 @@ function AddStockTransactionForm({
             min="0"
             step="0.01"
             required={hasSettlementCurrencyMismatch}
+            defaultValue={transaction.cash_settlement_amount ?? transaction.net_amount}
             placeholder={
               selectedCashAccount
                 ? `${selectedCashAccount.currency} 金額；同幣別不填會沿用交易淨額`
                 : "選擇資金戶後顯示幣別"
             }
           />
-          {hasSettlementCurrencyMismatch ? (
-            <p className="text-xs leading-relaxed text-muted-foreground dark:text-zinc-500">
-              股票以 {selectedStock?.currency} 成交，資金戶以 {selectedCashAccount?.currency}{" "}
-              入扣帳，請填券商實際扣款或入帳金額。
-            </p>
-          ) : null}
         </label>
       </div>
 
       <label className="space-y-2 text-sm">
         <span className="text-muted-foreground dark:text-zinc-100">備註</span>
-        <Textarea name="note" placeholder="可記錄交易策略、事件或備註" />
+        <Textarea
+          name="note"
+          defaultValue={transaction.note ?? ""}
+          placeholder="可記錄交易策略、事件或備註"
+        />
       </label>
 
       {state.message && !state.success ? (
@@ -442,9 +450,49 @@ function AddStockTransactionForm({
           取消
         </Button>
         <Button type="submit" disabled={isPending || !selectedCashAccountId || !selectedStock}>
-          {isPending ? "新增中" : "新增"}
+          {isPending ? "儲存中" : "儲存"}
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+export function EditStockTransactionDialog({
+  open,
+  onOpenChange,
+  accounts,
+  transaction,
+}: EditStockTransactionDialogProps) {
+  const [formKey, setFormKey] = useState(0);
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setFormKey(key => key + 1);
+    }
+
+    onOpenChange(nextOpen);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader className="space-y-2 pb-1">
+          <DialogTitle className="flex items-center gap-2">
+            <TrendingUp className="size-4 text-primary" />
+            編輯股票交易明細
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            編輯單筆股票交易紀錄與其對應資金異動。
+          </DialogDescription>
+        </DialogHeader>
+
+        <EditStockTransactionForm
+          key={formKey}
+          accounts={accounts}
+          transaction={transaction}
+          onSuccess={() => onOpenChange(false)}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

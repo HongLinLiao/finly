@@ -1,0 +1,161 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { getCurrentUser } from "@/lib/auth/current-user";
+import {
+  normalizeCurrency,
+  normalizeDate,
+  normalizeNumber,
+  normalizeOptionalText,
+} from "@/lib/form";
+import { findStockOption } from "@/lib/stock-options";
+import updateStockTransactionRecord from "@/lib/supabase/stock/updateStockTransaction";
+
+import type { TradeSide } from "@/types";
+
+export type UpdateStockTransactionState = {
+  success: boolean;
+  message: string;
+};
+
+const INITIAL_ERROR_STATE: UpdateStockTransactionState = {
+  success: false,
+  message: "",
+};
+
+function calculateNetAmount(side: TradeSide, grossAmount: number, fee: number, tax: number) {
+  return side === "sell" ? grossAmount - fee - tax : grossAmount + fee + tax;
+}
+
+export async function updateStockTransaction(
+  _previousState: UpdateStockTransactionState,
+  formData: FormData
+): Promise<UpdateStockTransactionState> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "登入狀態已失效，請重新登入。",
+    };
+  }
+
+  const id = normalizeOptionalText(formData.get("id"));
+  const accountId = normalizeOptionalText(formData.get("accountId"));
+  const cashAccountId = normalizeOptionalText(formData.get("cashAccountId"));
+  const symbol = normalizeOptionalText(formData.get("symbol"))?.toUpperCase() ?? null;
+  const market = normalizeOptionalText(formData.get("market"))?.toUpperCase() ?? null;
+  const yahooSymbol = normalizeOptionalText(formData.get("yahooSymbol"))?.toUpperCase() ?? null;
+  const side = normalizeOptionalText(formData.get("side")) as TradeSide | null;
+  const tradeDate = normalizeDate(formData.get("tradeDate"));
+  const quantity = normalizeNumber(formData.get("quantity"));
+  const unitPrice = normalizeNumber(formData.get("unitPrice"));
+  const grossAmountInput = normalizeNumber(formData.get("grossAmount"));
+  const fee = normalizeNumber(formData.get("fee")) ?? 0;
+  const tax = normalizeNumber(formData.get("tax")) ?? 0;
+  const netAmountInput = normalizeNumber(formData.get("netAmount"));
+  const cashSettlementAmountInput = normalizeNumber(formData.get("cashSettlementAmount"));
+  const currency = normalizeCurrency(formData.get("currency"));
+  const note = normalizeOptionalText(formData.get("note"));
+
+  if (
+    !id ||
+    !accountId ||
+    !cashAccountId ||
+    !symbol ||
+    !market ||
+    !yahooSymbol ||
+    !tradeDate ||
+    !side ||
+    !quantity ||
+    unitPrice === null ||
+    !currency
+  ) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "請填寫資金戶、股票標的、交易日期、數量、單價與幣別。",
+    };
+  }
+
+  if (side !== "buy" && side !== "sell") {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "交易方向不正確。",
+    };
+  }
+
+  if (currency === "INVALID") {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "幣別格式不正確。",
+    };
+  }
+
+  const stockOption = await findStockOption({
+    symbol,
+    market,
+    currency,
+    yahooSymbol,
+  });
+
+  if (!stockOption) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "股票標的資料不正確，請重新選擇股票。",
+    };
+  }
+
+  if (quantity <= 0 || unitPrice < 0 || fee < 0 || tax < 0) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "數量、單價與費用不可為負數。",
+    };
+  }
+
+  const grossAmount = grossAmountInput ?? quantity * unitPrice;
+  const netAmount = netAmountInput ?? calculateNetAmount(side, grossAmount, fee, tax);
+
+  if (cashSettlementAmountInput !== null && cashSettlementAmountInput <= 0) {
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "資金戶扣款或入帳金額必須大於 0。",
+    };
+  }
+
+  try {
+    await updateStockTransactionRecord({
+      id,
+      userUid: user.uid,
+      accountId,
+      cashAccountId,
+      symbol,
+      market,
+      tradeDate,
+      side,
+      quantity,
+      unitPrice,
+      grossAmount,
+      fee,
+      tax,
+      netAmount,
+      currency,
+      cashSettlementAmount: cashSettlementAmountInput,
+      note,
+    });
+  } catch (error) {
+    console.error("Failed to update stock transaction:", error);
+
+    return {
+      ...INITIAL_ERROR_STATE,
+      message: "更新股票交易失敗，請稍後再試。",
+    };
+  }
+
+  revalidatePath("/stocks");
+
+  return {
+    success: true,
+    message: "已更新股票交易。",
+  };
+}

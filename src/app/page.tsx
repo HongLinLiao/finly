@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { AccountBalanceGrid } from "@/components/dashboard/account-balance-grid";
 import { AssetValueTabs } from "@/components/dashboard/asset-value-tabs";
 import { PortfolioKpiStrip } from "@/components/dashboard/portfolio-kpi-strip";
+import { DashboardPageSkeleton } from "@/components/loading/page-skeletons";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { toTwdValue } from "@/lib/currency-conversion";
@@ -254,14 +256,13 @@ function buildFundValues(
     );
 }
 
-export default async function Home() {
+async function HomeContent() {
   const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login?returnTo=%2F");
   }
 
-  const breadcrumbs = [{ label: "首頁", active: true }];
   const [accounts, cashMovements, stockTransactions, fundTransactions, funds] = await Promise.all([
     getBrokerageAccounts(user.uid),
     getCashAccountMovements(user.uid),
@@ -309,7 +310,7 @@ export default async function Home() {
   );
 
   return (
-    <Page breadcrumbs={breadcrumbs}>
+    <>
       <PortfolioKpiStrip
         twdCashTotal={twd_cash_total}
         foreignCashTotal={foreign_cash_total}
@@ -320,6 +321,16 @@ export default async function Home() {
       <AccountBalanceGrid accounts={cashAccounts} />
 
       <AssetValueTabs stockValues={stockValues} fundValues={fundValues} />
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Page breadcrumbs={[{ label: "首頁", active: true }]}>
+      <Suspense fallback={<DashboardPageSkeleton />}>
+        <HomeContent />
+      </Suspense>
     </Page>
   );
 }

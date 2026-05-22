@@ -1,8 +1,10 @@
 import { Building2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { AddAccountFab } from "@/components/brokerage/add-account-fab";
 import { BrokerageAccountList } from "@/components/brokerage/brokerage-account-list";
+import { BrokerageSettingsPageSkeleton } from "@/components/loading/page-skeletons";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -15,7 +17,7 @@ export const dynamic = "force-dynamic";
 const labelClassName = "text-xs text-muted-foreground dark:text-zinc-500";
 const valueClassName = "text-foreground dark:text-zinc-50";
 
-const BrokeragesPage = async () => {
+const BrokeragesPageContent = async () => {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -33,7 +35,7 @@ const BrokeragesPage = async () => {
   );
 
   return (
-    <Page breadcrumbs={[{ label: "證券戶設定", active: true }]}>
+    <>
       <section className="space-y-5">
         <header className="space-y-4">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground dark:text-zinc-50">
@@ -66,8 +68,16 @@ const BrokeragesPage = async () => {
         )}
       </section>
       <AddAccountFab accounts={accounts} currencies={currencies} />
-    </Page>
+    </>
   );
 };
+
+const BrokeragesPage = () => (
+  <Page breadcrumbs={[{ label: "證券戶設定", active: true }]}>
+    <Suspense fallback={<BrokerageSettingsPageSkeleton />}>
+      <BrokeragesPageContent />
+    </Suspense>
+  </Page>
+);
 
 export default BrokeragesPage;

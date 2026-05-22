@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { CashMovementRecordsClient } from "@/components/brokerage/cash-movement-records-client";
+import { CashMovementRecordsPageSkeleton } from "@/components/loading/page-skeletons";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import getBrokerageAccounts from "@/services/brokerage/getBrokerageAccounts";
@@ -55,7 +57,7 @@ function getTaipeiMonthRange(year: number, month: number) {
   };
 }
 
-const BrokerageRecordsPage = async ({ searchParams }: BrokerageRecordsPageProps) => {
+const BrokerageRecordsPageContent = async ({ searchParams }: BrokerageRecordsPageProps) => {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -81,18 +83,24 @@ const BrokerageRecordsPage = async ({ searchParams }: BrokerageRecordsPageProps)
   ]);
 
   return (
-    <Page breadcrumbs={[{ label: "帳戶交易", active: true }]}>
-      <CashMovementRecordsClient
-        accounts={accounts}
-        fundTransactions={fundTransactions}
-        funds={funds}
-        movements={movements}
-        stockTransactions={stockTransactions}
-        year={year}
-        month={month}
-      />
-    </Page>
+    <CashMovementRecordsClient
+      accounts={accounts}
+      fundTransactions={fundTransactions}
+      funds={funds}
+      movements={movements}
+      stockTransactions={stockTransactions}
+      year={year}
+      month={month}
+    />
   );
 };
+
+const BrokerageRecordsPage = ({ searchParams }: BrokerageRecordsPageProps) => (
+  <Page breadcrumbs={[{ label: "帳戶交易", active: true }]}>
+    <Suspense fallback={<CashMovementRecordsPageSkeleton />}>
+      <BrokerageRecordsPageContent searchParams={searchParams} />
+    </Suspense>
+  </Page>
+);
 
 export default BrokerageRecordsPage;

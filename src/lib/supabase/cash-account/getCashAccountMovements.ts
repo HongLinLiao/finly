@@ -2,14 +2,28 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 import type { CashAccountMovement } from "@/types";
 
-async function getCashAccountMovementRecords(userUid: string) {
+export interface GetCashAccountMovementRecordsOptions {
+  occurredAtFrom?: string;
+  occurredAtTo?: string;
+}
+
+async function getCashAccountMovementRecords(
+  userUid: string,
+  options: GetCashAccountMovementRecordsOptions = {}
+) {
   const supabase = getSupabaseAdminClient();
 
-  const { data, error } = await supabase
-    .from("cash_account_movements")
-    .select("*")
-    .eq("user_uid", userUid)
-    .order("occurred_at", { ascending: false });
+  let query = supabase.from("cash_account_movements").select("*").eq("user_uid", userUid);
+
+  if (options.occurredAtFrom) {
+    query = query.gte("occurred_at", options.occurredAtFrom);
+  }
+
+  if (options.occurredAtTo) {
+    query = query.lt("occurred_at", options.occurredAtTo);
+  }
+
+  const { data, error } = await query.order("occurred_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch cash account movements: ${error.message}`);

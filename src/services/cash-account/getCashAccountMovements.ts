@@ -1,7 +1,15 @@
 import getCashAccountMovementRecords from "@/lib/supabase/cash-account/getCashAccountMovements";
 
-async function getCashAccountMovements(userUid: string) {
-  return getCashAccountMovementRecords(userUid);
+interface GetCashAccountMovementsOptions {
+  occurredAtFrom?: string;
+  occurredAtTo?: string;
+}
+
+async function getCashAccountMovements(
+  userUid: string,
+  options: GetCashAccountMovementsOptions = {}
+) {
+  return getCashAccountMovementRecords(userUid, options);
 }
 
 export default getCashAccountMovements;

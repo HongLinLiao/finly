@@ -2,14 +2,28 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 import type { FundTransaction } from "@/types";
 
-async function getFundTransactionRecords(userUid: string) {
+export interface GetFundTransactionRecordsOptions {
+  tradeDateFrom?: string;
+  tradeDateTo?: string;
+}
+
+async function getFundTransactionRecords(
+  userUid: string,
+  options: GetFundTransactionRecordsOptions = {}
+) {
   const supabase = getSupabaseAdminClient();
 
-  const { data, error } = await supabase
-    .from("fund_transactions")
-    .select("*")
-    .eq("user_uid", userUid)
-    .order("trade_date", { ascending: false });
+  let query = supabase.from("fund_transactions").select("*").eq("user_uid", userUid);
+
+  if (options.tradeDateFrom) {
+    query = query.gte("trade_date", options.tradeDateFrom);
+  }
+
+  if (options.tradeDateTo) {
+    query = query.lt("trade_date", options.tradeDateTo);
+  }
+
+  const { data, error } = await query.order("trade_date", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch fund transactions: ${error.message}`);

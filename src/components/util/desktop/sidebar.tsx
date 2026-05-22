@@ -7,6 +7,7 @@ import {
   House,
   Settings,
   Building2,
+  ArrowLeftRight,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,17 +38,22 @@ const DESKTOP_MENU = [
   { title: "股票", icon: ChartCandlestick, href: "/stocks" },
   { title: "基金", icon: HandCoins, href: "/funds" },
   {
-    title: "設定",
-    icon: Settings,
-    items: [{ title: "證券戶設定", href: "/brokerages", icon: Building2 }],
+    title: "現金帳戶",
+    icon: Building2,
+    items: [
+      { title: "帳戶交易", icon: ArrowLeftRight, href: "/brokerages/records", exact: false },
+      { title: "證券戶設定", href: "/brokerages", icon: Settings, exact: true },
+    ],
   },
 ] as const;
 
 const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
   const pathname = usePathname();
 
-  const isActiveHref = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  const isActiveHref = (href: string, exact = false) =>
+    href === "/" || exact
+      ? pathname === href
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Sidebar className={cn("group-data-[side=left]:border-r-0", className)} collapsible="offcanvas">
@@ -82,7 +88,7 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
             <SidebarMenu className="gap-1">
               {DESKTOP_MENU.map(item => {
                 if ("items" in item) {
-                  const isActive = item.items.some(child => isActiveHref(child.href));
+                  const isActive = item.items.some(child => isActiveHref(child.href, child.exact));
 
                   return (
                     <Collapsible
@@ -105,7 +111,7 @@ const DesktopSidebar = ({ className }: DesktopSidebarProps) => {
                               <SidebarMenuSubItem key={child.href}>
                                 <SidebarMenuSubButton
                                   asChild
-                                  isActive={isActiveHref(child.href)}
+                                  isActive={isActiveHref(child.href, child.exact)}
                                   className="h-8"
                                 >
                                   <Link href={child.href}>

@@ -2,14 +2,28 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 import type { StockTransaction } from "@/types";
 
-async function getStockTransactionRecords(userUid: string) {
+export interface GetStockTransactionRecordsOptions {
+  tradeDateFrom?: string;
+  tradeDateTo?: string;
+}
+
+async function getStockTransactionRecords(
+  userUid: string,
+  options: GetStockTransactionRecordsOptions = {}
+) {
   const supabase = getSupabaseAdminClient();
 
-  const { data, error } = await supabase
-    .from("stock_transactions")
-    .select("*")
-    .eq("user_uid", userUid)
-    .order("trade_date", { ascending: false });
+  let query = supabase.from("stock_transactions").select("*").eq("user_uid", userUid);
+
+  if (options.tradeDateFrom) {
+    query = query.gte("trade_date", options.tradeDateFrom);
+  }
+
+  if (options.tradeDateTo) {
+    query = query.lt("trade_date", options.tradeDateTo);
+  }
+
+  const { data, error } = await query.order("trade_date", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch stock transactions: ${error.message}`);

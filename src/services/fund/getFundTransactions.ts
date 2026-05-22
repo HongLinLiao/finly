@@ -1,7 +1,12 @@
 import getFundTransactionRecords from "@/lib/supabase/fund/getFundTransactions";
 
-async function getFundTransactions(userUid: string) {
-  return getFundTransactionRecords(userUid);
+interface GetFundTransactionsOptions {
+  tradeDateFrom?: string;
+  tradeDateTo?: string;
+}
+
+async function getFundTransactions(userUid: string, options: GetFundTransactionsOptions = {}) {
+  return getFundTransactionRecords(userUid, options);
 }
 
 export default getFundTransactions;

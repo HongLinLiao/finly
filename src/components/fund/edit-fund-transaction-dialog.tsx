@@ -36,30 +36,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { RequiredMark } from "@/components/util/form/required-mark";
 import { cn } from "@/lib/utils";
 import {
-  createFundTransaction,
-  type CreateFundTransactionState,
-} from "@/services/fund/createFundTransaction";
+  updateFundTransaction,
+  type UpdateFundTransactionState,
+} from "@/services/fund/updateFundTransaction";
 import { DIVIDEND_MODE_OPTIONS } from "@/types/fund";
 
 import { Separator } from "../ui/separator";
 
 import type { TaiwanFundOption } from "@/lib/cnyes-fund";
 import type { BrokerageAccountWithCashAccounts } from "@/services/brokerage/getBrokerageAccounts";
-import type { FundTransactionType, TradeSide } from "@/types";
+import type { FundTransaction, FundTransactionType, TradeSide } from "@/types";
 
-interface AddFundTransactionDialogProps {
+interface EditFundTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: BrokerageAccountWithCashAccounts[];
   funds: TaiwanFundOption[];
+  transaction: FundTransaction;
 }
 
-const initialState: CreateFundTransactionState = {
+const initialState: UpdateFundTransactionState = {
   success: false,
   message: "",
 };
 
-function toDateInputValue(value: string) {
+function toDateInputValue(value?: number) {
+  if (!value) return "";
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value * 1000));
+}
+
+function toNavDateInputValue(value: string) {
   if (!/^\d{8}$/.test(value)) return "";
 
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
@@ -79,21 +91,33 @@ function FundOptionContent({ fund }: { fund: TaiwanFundOption }) {
   );
 }
 
-function AddFundTransactionForm({
+function getInitialTransactionType(transaction: FundTransaction): FundTransactionType {
+  if (transaction.transaction_type) return transaction.transaction_type;
+
+  return transaction.side === "sell" ? "redeem" : "subscribe";
+}
+
+function EditFundTransactionForm({
   accounts,
   funds,
+  transaction,
   onSuccess,
 }: {
   accounts: BrokerageAccountWithCashAccounts[];
   funds: TaiwanFundOption[];
+  transaction: FundTransaction;
   onSuccess: () => void;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, isPending] = useActionState(createFundTransaction, initialState);
-  const [selectedCashAccountId, setSelectedCashAccountId] = useState("");
-  const [selectedFundCode, setSelectedFundCode] = useState("");
+  const [state, formAction, isPending] = useActionState(updateFundTransaction, initialState);
+  const [selectedCashAccountId, setSelectedCashAccountId] = useState(
+    transaction.cash_account_id ?? ""
+  );
+  const [selectedFundCode, setSelectedFundCode] = useState(transaction.fund_code);
   const [isFundSearchOpen, setIsFundSearchOpen] = useState(false);
-  const [transactionType, setTransactionType] = useState<FundTransactionType>("subscribe");
+  const [transactionType, setTransactionType] = useState<FundTransactionType>(
+    getInitialTransactionType(transaction)
+  );
   const hasFunds = funds.length > 0;
   const selectedFund = funds.find(fund => fund.fundCode === selectedFundCode);
 
@@ -122,21 +146,17 @@ function AddFundTransactionForm({
   useEffect(() => {
     if (!state.success) return;
 
-    formRef.current?.reset();
     onSuccess();
   }, [onSuccess, state.success]);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
+      <input type="hidden" name="id" value={transaction.id} />
       <input type="hidden" name="accountId" value={selectedCashAccount?.brokerageAccountId ?? ""} />
       <input type="hidden" name="cashAccountId" value={selectedCashAccount?.id ?? ""} />
       <input type="hidden" name="fundCode" value={selectedFund?.fundCode ?? ""} />
       <input type="hidden" name="side" value={side} />
-      <input
-        type="hidden"
-        name="currency"
-        value={selectedFund?.currency ?? selectedCashAccount?.currency ?? "TWD"}
-      />
+      <input type="hidden" name="currency" value={selectedFund?.currency ?? transaction.currency} />
 
       <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm sm:col-span-2">
@@ -160,7 +180,7 @@ function AddFundTransactionForm({
                   </span>
                 ) : (
                   <span className="text-muted-foreground dark:text-zinc-400">
-                    {hasFunds ? "搜尋基金名稱或代碼" : "基金資料暫時無法載入"}
+                    {hasFunds ? transaction.fund_code : "基金資料暫時無法載入"}
                   </span>
                 )}
                 <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
@@ -212,11 +232,6 @@ function AddFundTransactionForm({
               </Command>
             </PopoverContent>
           </Popover>
-          {!hasFunds ? (
-            <p className="text-xs text-muted-foreground dark:text-zinc-500">
-              基金資料來源暫時無法連線，稍後重新整理後可再試一次。
-            </p>
-          ) : null}
         </label>
 
         <label className="space-y-2 text-sm sm:col-span-2">
@@ -246,7 +261,12 @@ function AddFundTransactionForm({
             交易日期
             <RequiredMark />
           </span>
-          <Input name="tradeDate" required type="date" />
+          <Input
+            name="tradeDate"
+            required
+            type="date"
+            defaultValue={toDateInputValue(transaction.trade_date)}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
@@ -254,7 +274,10 @@ function AddFundTransactionForm({
           <Input
             name="navDate"
             type="date"
-            defaultValue={toDateInputValue(selectedFund?.latestNavDate ?? "")}
+            defaultValue={
+              toDateInputValue(transaction.nav_date) ||
+              toNavDateInputValue(selectedFund?.latestNavDate ?? "")
+            }
           />
         </label>
 
@@ -279,7 +302,7 @@ function AddFundTransactionForm({
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">配息方式</span>
-          <Select name="dividendMode" defaultValue="accumulation">
+          <Select name="dividendMode" defaultValue={transaction.dividend_mode ?? "accumulation"}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -313,7 +336,14 @@ function AddFundTransactionForm({
             單位數
             <RequiredMark />
           </span>
-          <Input name="quantity" required type="number" min="0.000001" step="0.000001" />
+          <Input
+            name="quantity"
+            required
+            type="number"
+            min="0.000001"
+            step="0.000001"
+            defaultValue={transaction.quantity}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
@@ -322,39 +352,38 @@ function AddFundTransactionForm({
             <RequiredMark />
           </span>
           <Input
-            key={selectedFund?.fundCode ?? "unit-price"}
             name="unitPrice"
             required
             type="number"
             min="0"
             step="0.000001"
-            defaultValue={selectedFund?.latestNav ?? ""}
+            defaultValue={transaction.unit_price}
           />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">
-            原始成交金額（{selectedFund?.currency ?? "基金幣別"}）
+            原始成交金額（{selectedFund?.currency ?? transaction.currency}）
           </span>
           <Input
             name="grossAmount"
             type="number"
             min="0"
             step="0.01"
-            placeholder="不填會自動用單位數 x 單位淨值"
+            defaultValue={transaction.gross_amount}
           />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">
-            交易淨額（{selectedFund?.currency ?? "基金幣別"}）
+            交易淨額（{selectedFund?.currency ?? transaction.currency}）
           </span>
           <Input
             name="netAmount"
             type="number"
             min="0"
             step="0.01"
-            placeholder="不填會依交易方向自動計算"
+            defaultValue={transaction.net_amount}
           />
         </label>
 
@@ -369,34 +398,45 @@ function AddFundTransactionForm({
             min="0"
             step="0.01"
             required={hasSettlementCurrencyMismatch}
+            defaultValue={transaction.cash_settlement_amount ?? transaction.net_amount}
             placeholder={
               selectedCashAccount
                 ? `${selectedCashAccount.currency} 金額；同幣別不填會沿用交易淨額`
                 : "選擇資金戶後顯示幣別"
             }
           />
-          {hasSettlementCurrencyMismatch ? (
-            <p className="text-xs leading-relaxed text-muted-foreground dark:text-zinc-500">
-              基金以 {selectedFund?.currency} 交易，資金戶以 {selectedCashAccount?.currency}{" "}
-              入扣帳，請填實際扣款或入帳金額。
-            </p>
-          ) : null}
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">手續費</span>
-          <Input name="fee" type="number" min="0" step="0.01" />
+          <Input
+            name="fee"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={transaction.fee ?? ""}
+          />
         </label>
 
         <label className="space-y-2 text-sm">
           <span className="text-muted-foreground dark:text-zinc-100">稅額</span>
-          <Input name="tax" type="number" min="0" step="0.01" />
+          <Input
+            name="tax"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={transaction.tax ?? ""}
+          />
         </label>
       </div>
 
       <label className="space-y-2 text-sm">
         <span className="text-muted-foreground dark:text-zinc-100">備註</span>
-        <Textarea name="note" placeholder="可記錄申購批次、轉換原因或備註" />
+        <Textarea
+          name="note"
+          defaultValue={transaction.note ?? ""}
+          placeholder="可記錄申購批次、轉換原因或備註"
+        />
       </label>
 
       {state.message && !state.success ? (
@@ -412,19 +452,20 @@ function AddFundTransactionForm({
           取消
         </Button>
         <Button type="submit" disabled={isPending || !selectedCashAccount || !selectedFund}>
-          {isPending ? "新增中" : "新增"}
+          {isPending ? "儲存中" : "儲存"}
         </Button>
       </DialogFooter>
     </form>
   );
 }
 
-export function AddFundTransactionDialog({
+export function EditFundTransactionDialog({
   open,
   onOpenChange,
   accounts,
   funds,
-}: AddFundTransactionDialogProps) {
+  transaction,
+}: EditFundTransactionDialogProps) {
   const [formKey, setFormKey] = useState(0);
 
   function handleOpenChange(nextOpen: boolean) {
@@ -441,17 +482,18 @@ export function AddFundTransactionDialog({
         <DialogHeader className="space-y-2 pb-1">
           <DialogTitle className="flex items-center gap-2">
             <HandCoins className="size-4 text-primary" />
-            新增基金交易明細
+            編輯基金交易明細
           </DialogTitle>
           <DialogDescription className="sr-only">
-            新增單筆基金交易紀錄，並建立對應資金異動。
+            編輯單筆基金交易紀錄與其對應資金異動。
           </DialogDescription>
         </DialogHeader>
 
-        <AddFundTransactionForm
+        <EditFundTransactionForm
           key={formKey}
           accounts={accounts}
           funds={funds}
+          transaction={transaction}
           onSuccess={() => onOpenChange(false)}
         />
       </DialogContent>

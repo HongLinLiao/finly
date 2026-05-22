@@ -73,7 +73,6 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
   });
 
   return Array.from(positionMap.values())
-    .filter(position => position.quantity > 0)
     .map<FundPosition>(position => {
       const fund = fundMap.get(position.fundCode);
       const latestNav = fund?.latestNav ?? 0;
@@ -91,21 +90,41 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
         risk: "RR3",
         dividendMode: position.dividendMode ?? "accumulation",
         currency: (fund?.currency ?? position.currency) as FundPosition["currency"],
+        quantity: position.quantity,
         costAmount: position.costAmount,
         marketValue,
         unrealizedReturnRate,
       };
     })
-    .sort((a, b) => b.marketValue - a.marketValue);
+    .sort((a, b) => b.marketValue - a.marketValue || a.name.localeCompare(b.name));
 }
 
 export function FundsClientPage({ accounts, funds, transactions }: FundsClientPageProps) {
   const [openedRows, setOpenedRows] = useState<Record<string, boolean>>({});
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const positions = useMemo(() => buildFundPositions(transactions, funds), [funds, transactions]);
+  const activePositions = useMemo(
+    () => positions.filter(position => position.quantity > 0),
+    [positions]
+  );
+  const transactionsByFundCode = useMemo(() => {
+    const map = new Map<string, FundTransaction[]>();
+
+    transactions.forEach(transaction => {
+      const items = map.get(transaction.fund_code) ?? [];
+      items.push(transaction);
+      map.set(transaction.fund_code, items);
+    });
+
+    map.forEach(items => {
+      items.sort((a, b) => b.trade_date - a.trade_date || b.created_at - a.created_at);
+    });
+
+    return map;
+  }, [transactions]);
 
   const summary = useMemo(() => {
-    const totals = positions.reduce(
+    const totals = activePositions.reduce(
       (acc, item) => ({
         marketValue: acc.marketValue + item.marketValue,
         costAmount: acc.costAmount + item.costAmount,
@@ -113,13 +132,13 @@ export function FundsClientPage({ accounts, funds, transactions }: FundsClientPa
       { marketValue: 0, costAmount: 0 }
     );
 
-    const count = positions.length;
+    const count = activePositions.length;
     const unrealizedPnl = totals.marketValue - totals.costAmount;
     const unrealizedReturnRate =
       totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
 
     return { count, marketValue: totals.marketValue, unrealizedPnl, unrealizedReturnRate };
-  }, [positions]);
+  }, [activePositions]);
 
   return (
     <section className="space-y-5">
@@ -144,6 +163,9 @@ export function FundsClientPage({ accounts, funds, transactions }: FundsClientPa
               onOpenChange={open => {
                 setOpenedRows(prev => ({ ...prev, [item.id]: open }));
               }}
+              accounts={accounts}
+              funds={funds}
+              transactions={transactionsByFundCode.get(item.symbol) ?? []}
             />
           ))
         )}

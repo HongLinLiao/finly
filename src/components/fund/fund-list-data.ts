@@ -11,6 +11,7 @@ export interface FundPosition {
   risk: FundRisk;
   dividendMode: DividendMode;
   currency: FundCurrency;
+  quantity: number;
   costAmount: number;
   marketValue: number;
   unrealizedReturnRate: number;

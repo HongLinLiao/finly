@@ -38,6 +38,10 @@ export interface BaseTransaction {
 export interface StockTransaction extends BaseTransaction {
   /** 股票代號 */
   symbol: string;
+  /** 交割資金戶識別碼（由關聯資金異動推回） */
+  cash_account_id?: string;
+  /** 資金戶實際入帳 / 扣款金額 */
+  cash_settlement_amount?: number;
   /** 交易市場，例如 TWSE、NASDAQ */
   market?: string;
 }
@@ -45,6 +49,10 @@ export interface StockTransaction extends BaseTransaction {
 export interface FundTransaction extends BaseTransaction {
   /** 基金代碼 */
   fund_code: string;
+  /** 交割資金戶識別碼（由關聯資金異動推回） */
+  cash_account_id?: string;
+  /** 資金戶實際入帳 / 扣款金額 */
+  cash_settlement_amount?: number;
   /** 淨值日（Unix timestamp） */
   nav_date?: Timestamp;
   /** 申購 / 贖回 / 轉入 / 轉出 */

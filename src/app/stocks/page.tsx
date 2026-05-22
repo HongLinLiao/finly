@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
+import { HoldingPageSkeleton } from "@/components/loading/page-skeletons";
 import { StocksClientPage } from "@/components/stock/stocks-client-page";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -10,7 +12,7 @@ import getStockTransactions from "@/services/stock/getStockTransactions";
 
 export const dynamic = "force-dynamic";
 
-const StocksPage = async () => {
+const StocksPageContent = async () => {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -34,15 +36,21 @@ const StocksPage = async () => {
   );
 
   return (
-    <Page breadcrumbs={[{ label: "股票", active: true }]}>
-      <StocksClientPage
-        accounts={accounts}
-        transactions={transactions}
-        quotes={quotes}
-        ratesToTwd={ratesToTwd}
-      />
-    </Page>
+    <StocksClientPage
+      accounts={accounts}
+      transactions={transactions}
+      quotes={quotes}
+      ratesToTwd={ratesToTwd}
+    />
   );
 };
+
+const StocksPage = () => (
+  <Page breadcrumbs={[{ label: "股票", active: true }]}>
+    <Suspense fallback={<HoldingPageSkeleton />}>
+      <StocksPageContent />
+    </Suspense>
+  </Page>
+);
 
 export default StocksPage;

@@ -1,7 +1,12 @@
 import getStockTransactionRecords from "@/lib/supabase/stock/getStockTransactions";
 
-async function getStockTransactions(userUid: string) {
-  return getStockTransactionRecords(userUid);
+interface GetStockTransactionsOptions {
+  tradeDateFrom?: string;
+  tradeDateTo?: string;
+}
+
+async function getStockTransactions(userUid: string, options: GetStockTransactionsOptions = {}) {
+  return getStockTransactionRecords(userUid, options);
 }
 
 export default getStockTransactions;

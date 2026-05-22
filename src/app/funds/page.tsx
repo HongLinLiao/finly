@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { FundsClientPage } from "@/components/fund/funds-client-page";
+import { HoldingPageSkeleton } from "@/components/loading/page-skeletons";
 import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import getBrokerageAccounts from "@/services/brokerage/getBrokerageAccounts";
@@ -9,7 +11,7 @@ import getTaiwanFunds from "@/services/fund/getTaiwanFunds";
 
 export const dynamic = "force-dynamic";
 
-const FundsPage = async () => {
+const FundsPageContent = async () => {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -22,11 +24,15 @@ const FundsPage = async () => {
     getFundTransactions(user.uid),
   ]);
 
-  return (
-    <Page breadcrumbs={[{ label: "基金", active: true }]}>
-      <FundsClientPage accounts={accounts} funds={funds} transactions={transactions} />
-    </Page>
-  );
+  return <FundsClientPage accounts={accounts} funds={funds} transactions={transactions} />;
 };
+
+const FundsPage = () => (
+  <Page breadcrumbs={[{ label: "基金", active: true }]}>
+    <Suspense fallback={<HoldingPageSkeleton />}>
+      <FundsPageContent />
+    </Suspense>
+  </Page>
+);
 
 export default FundsPage;

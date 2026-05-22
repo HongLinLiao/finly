@@ -2,7 +2,8 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 import type { AssetKind, CashMovementDirection, CashMovementMethod, CurrencyCode } from "@/types";
 
-export interface CreateCashAccountMovementInput {
+export interface UpdateCashAccountMovementInput {
+  id: string;
   userUid: string;
   brokerageAccountId: string;
   cashAccountId: string;
@@ -13,18 +14,16 @@ export interface CreateCashAccountMovementInput {
   currency: CurrencyCode;
   balanceAfter?: number | null;
   relatedAssetType?: AssetKind | null;
-  stockTransactionId?: string | null;
-  fundTransactionId?: string | null;
   relatedAssetCode?: string | null;
   note?: string | null;
 }
 
-async function createCashAccountMovementRecord(input: CreateCashAccountMovementInput) {
+async function updateCashAccountMovementRecord(input: UpdateCashAccountMovementInput) {
   const supabase = getSupabaseAdminClient();
 
   const { data: cashAccount, error: cashAccountError } = await supabase
     .from("securities_cash_accounts")
-    .select("id, currency")
+    .select("id")
     .eq("id", input.cashAccountId)
     .eq("brokerage_account_id", input.brokerageAccountId)
     .eq("user_uid", input.userUid)
@@ -40,8 +39,7 @@ async function createCashAccountMovementRecord(input: CreateCashAccountMovementI
 
   const { data, error } = await supabase
     .from("cash_account_movements")
-    .insert({
-      user_uid: input.userUid,
+    .update({
       brokerage_account_id: input.brokerageAccountId,
       cash_account_id: input.cashAccountId,
       occurred_at: input.occurredAt,
@@ -51,19 +49,23 @@ async function createCashAccountMovementRecord(input: CreateCashAccountMovementI
       currency: input.currency,
       balance_after: input.balanceAfter ?? null,
       related_asset_type: input.relatedAssetType ?? null,
-      stock_transaction_id: input.stockTransactionId ?? null,
-      fund_transaction_id: input.fundTransactionId ?? null,
       related_asset_code: input.relatedAssetCode ?? null,
       note: input.note ?? null,
     })
+    .eq("id", input.id)
+    .eq("user_uid", input.userUid)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to create cash account movement: ${error.message}`);
+    throw new Error(`Failed to update cash account movement: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Cash account movement does not belong to current user.");
   }
 
   return data;
 }
 
-export default createCashAccountMovementRecord;
+export default updateCashAccountMovementRecord;

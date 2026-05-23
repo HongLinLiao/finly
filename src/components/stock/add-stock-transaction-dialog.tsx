@@ -57,7 +57,9 @@ const initialState: CreateStockTransactionState = {
 function StockOptionContent({ stock }: { stock: StockOption }) {
   return (
     <>
-      <span className="min-w-18 font-medium text-foreground">{stock.symbol}</span>
+      <span className="min-w-0 max-w-28 shrink-0 truncate font-medium text-foreground">
+        {stock.symbol}
+      </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-foreground">{stock.name}</span>
         <span className="truncate text-xs font-normal text-muted-foreground">
@@ -207,7 +209,7 @@ function AddStockTransactionForm({
       <input type="hidden" name="side" value={side} />
       <input type="hidden" name="currency" value={selectedStock?.currency ?? ""} />
 
-      <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm sm:col-span-2">
           <span className="text-muted-foreground dark:text-zinc-100">
             資金戶
@@ -247,14 +249,14 @@ function AddStockTransactionForm({
                 variant="ghost"
                 role="combobox"
                 aria-expanded={isStockSearchOpen}
-                className="h-auto min-h-9 w-full justify-between gap-3 rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
+                className="h-auto min-h-9 w-full min-w-0 justify-between gap-3 overflow-hidden rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
               >
                 {selectedStock ? (
-                  <span className="flex min-w-0 flex-1 items-start gap-2">
+                  <span className="flex min-w-0 flex-1 items-start gap-2 overflow-hidden">
                     <StockOptionContent stock={selectedStock} />
                   </span>
                 ) : (
-                  <span className="text-muted-foreground dark:text-zinc-400">
+                  <span className="min-w-0 truncate text-muted-foreground dark:text-zinc-400">
                     搜尋股票代號或名稱
                   </span>
                 )}
@@ -298,7 +300,7 @@ function AddStockTransactionForm({
                           setStockSearch("");
                           setIsStockSearchOpen(false);
                         }}
-                        className="items-start [&>svg:last-child]:hidden"
+                        className="min-w-0 items-start [&>svg:last-child]:hidden"
                       >
                         <StockOptionContent stock={stock} />
                         <Check

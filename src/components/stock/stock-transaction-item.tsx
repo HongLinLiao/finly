@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { formatPrice } from "@/lib/format";
 
 import { formatCurrency, formatDateTime, formatNumber, sideLabels } from "./stock-transaction-data";
 
@@ -85,7 +86,7 @@ export function StockTransactionItem({
               <div className="flex items-end justify-between gap-3 pl-12">
                 <p className="text-xs text-muted-foreground dark:text-zinc-400">
                   {formatNumber(item.quantity)} 股 · 單價{" "}
-                  {formatCurrency(item.unit_price, item.currency)}
+                  {formatPrice(item.unit_price, item.currency)}
                 </p>
                 <p className="shrink-0 text-right text-base font-semibold text-foreground dark:text-zinc-100 sm:text-sm">
                   {formatCurrency(item.net_amount, item.currency)}
@@ -103,7 +104,7 @@ export function StockTransactionItem({
                 label="最新收盤價"
                 value={
                   latestQuote?.close
-                    ? `${formatCurrency(latestQuote.close, latestQuote.currency)}${
+                    ? `${formatPrice(latestQuote.close, latestQuote.currency)}${
                         latestQuote.priceDate ? ` · ${latestQuote.priceDate}` : ""
                       }`
                     : "—"

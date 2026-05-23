@@ -19,6 +19,15 @@ export const formatCurrency = (value: number, currency: string) => {
   return `${normalizedCurrency} $${formatNumber(value, fractionDigits)}`;
 };
 
+export const formatPrice = (value: number, currency: string) => {
+  const normalizedCurrency = currency.trim().toUpperCase();
+
+  return `${normalizedCurrency} $${new Intl.NumberFormat("zh-TW", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}`;
+};
+
 export const formatPercent = (value: number) => {
   const truncatedValue = truncateToDigits(value, 2);
   return `${truncatedValue > 0 ? "+" : ""}${truncatedValue.toFixed(2)}%`;

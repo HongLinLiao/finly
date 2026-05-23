@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { AccountBalanceGrid } from "@/components/dashboard/account-balance-grid";
 import { AssetValueTabs } from "@/components/dashboard/asset-value-tabs";
+import { NewUserGuideDialog } from "@/components/dashboard/new-user-guide-dialog";
 import { PortfolioKpiStrip } from "@/components/dashboard/portfolio-kpi-strip";
 import { DashboardPageSkeleton } from "@/components/loading/page-skeletons";
 import Page from "@/components/util/Page";
@@ -311,6 +312,8 @@ async function HomeContent() {
 
   return (
     <>
+      <NewUserGuideDialog isNewUser={accounts.length === 0} />
+
       <PortfolioKpiStrip
         twdCashTotal={twd_cash_total}
         foreignCashTotal={foreign_cash_total}

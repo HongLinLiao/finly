@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatPercent, formatPrice } from "@/lib/format";
+import { subtractMoney } from "@/lib/money";
 import {
   deleteFundTransaction,
   type DeleteFundTransactionState,
@@ -83,7 +84,7 @@ export const FundPositionCard = ({
   open,
   onOpenChange,
 }: FundPositionCardProps) => {
-  const unrealizedPnl = item.marketValue - item.costAmount;
+  const unrealizedPnl = subtractMoney(item.marketValue, item.costAmount);
   const pnlColor = unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
     item.unrealizedReturnRate >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";

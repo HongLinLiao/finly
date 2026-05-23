@@ -10,6 +10,7 @@ import Page from "@/components/util/Page";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { toTwdValue } from "@/lib/currency-conversion";
 import { getExchangeRatesToTwd } from "@/lib/exchange-rates";
+import { addMoney, divideMoney, multiplyMoney, subtractMoney } from "@/lib/money";
 import { getStockPriceKey } from "@/lib/stock-price";
 import { fetchYahooStockQuotes } from "@/lib/yahoo-finance";
 import getBrokerageAccounts from "@/services/brokerage/getBrokerageAccounts";
@@ -43,7 +44,10 @@ function buildCashAccounts(
 ) {
   const balanceByCashAccount = movements.reduce((map, movement) => {
     const signedAmount = movement.direction === "in" ? movement.amount : -movement.amount;
-    map.set(movement.cash_account_id, (map.get(movement.cash_account_id) ?? 0) + signedAmount);
+    map.set(
+      movement.cash_account_id,
+      addMoney(map.get(movement.cash_account_id) ?? 0, signedAmount)
+    );
 
     return map;
   }, new Map<string, number>());
@@ -107,14 +111,18 @@ function buildStockValues(
         });
 
       if (transaction.side === "sell") {
-        const averageCost = existing.quantity > 0 ? existing.cost / existing.quantity : 0;
+        const averageCost =
+          existing.quantity > 0 ? divideMoney(existing.cost, existing.quantity) : 0;
         const soldQuantity = Math.min(transaction.quantity, existing.quantity);
 
-        existing.quantity -= transaction.quantity;
-        existing.cost = existing.quantity > 0 ? existing.cost - averageCost * soldQuantity : 0;
+        existing.quantity = subtractMoney(existing.quantity, transaction.quantity);
+        existing.cost =
+          existing.quantity > 0
+            ? subtractMoney(existing.cost, multiplyMoney(averageCost, soldQuantity))
+            : 0;
       } else {
-        existing.quantity += transaction.quantity;
-        existing.cost += transaction.net_amount;
+        existing.quantity = addMoney(existing.quantity, transaction.quantity);
+        existing.cost = addMoney(existing.cost, transaction.net_amount);
       }
 
       positionMap.set(positionKey, existing);
@@ -127,7 +135,9 @@ function buildStockValues(
     .forEach(position => {
       const priceKey = getStockPriceKey(position);
       const quote = quoteMap.get(priceKey);
-      const marketValue = quote?.close ? position.quantity * quote.close : position.cost;
+      const marketValue = quote?.close
+        ? multiplyMoney(position.quantity, quote.close)
+        : position.cost;
       const assetKey = `${position.symbol}|${position.market ?? ""}|${position.currency}`;
       const asset =
         assetMap.get(assetKey) ??
@@ -141,8 +151,8 @@ function buildStockValues(
           accountValues: [],
         } satisfies AssetValueItem);
 
-      asset.marketValue += marketValue;
-      asset.cost += position.cost;
+      asset.marketValue = addMoney(asset.marketValue, marketValue);
+      asset.cost = addMoney(asset.cost, position.cost);
       asset.accountValues.push({
         accountId: position.accountId,
         accountName: getAccountName(accounts, position.accountId),
@@ -154,7 +164,10 @@ function buildStockValues(
   return Array.from(assetMap.values())
     .map(item => ({
       ...item,
-      unrealizedReturnRate: item.cost > 0 ? ((item.marketValue - item.cost) / item.cost) * 100 : 0,
+      unrealizedReturnRate:
+        item.cost > 0
+          ? multiplyMoney(divideMoney(subtractMoney(item.marketValue, item.cost), item.cost), 100)
+          : 0,
     }))
     .sort(
       (a, b) =>
@@ -202,14 +215,18 @@ function buildFundValues(
         });
 
       if (transaction.side === "sell") {
-        const averageCost = existing.quantity > 0 ? existing.cost / existing.quantity : 0;
+        const averageCost =
+          existing.quantity > 0 ? divideMoney(existing.cost, existing.quantity) : 0;
         const soldQuantity = Math.min(transaction.quantity, existing.quantity);
 
-        existing.quantity -= transaction.quantity;
-        existing.cost = existing.quantity > 0 ? existing.cost - averageCost * soldQuantity : 0;
+        existing.quantity = subtractMoney(existing.quantity, transaction.quantity);
+        existing.cost =
+          existing.quantity > 0
+            ? subtractMoney(existing.cost, multiplyMoney(averageCost, soldQuantity))
+            : 0;
       } else {
-        existing.quantity += transaction.quantity;
-        existing.cost += transaction.net_amount;
+        existing.quantity = addMoney(existing.quantity, transaction.quantity);
+        existing.cost = addMoney(existing.cost, transaction.net_amount);
       }
 
       existing.currency = transaction.currency;
@@ -222,7 +239,9 @@ function buildFundValues(
     .filter(position => position.quantity > 0)
     .forEach(position => {
       const fund = fundMap.get(position.fundCode);
-      const marketValue = fund?.latestNav ? position.quantity * fund.latestNav : position.cost;
+      const marketValue = fund?.latestNav
+        ? multiplyMoney(position.quantity, fund.latestNav)
+        : position.cost;
       const asset =
         assetMap.get(position.fundCode) ??
         ({
@@ -235,8 +254,8 @@ function buildFundValues(
           accountValues: [],
         } satisfies AssetValueItem);
 
-      asset.marketValue += marketValue;
-      asset.cost += position.cost;
+      asset.marketValue = addMoney(asset.marketValue, marketValue);
+      asset.cost = addMoney(asset.cost, position.cost);
       asset.accountValues.push({
         accountId: position.accountId,
         accountName: getAccountName(accounts, position.accountId),
@@ -248,7 +267,10 @@ function buildFundValues(
   return Array.from(assetMap.values())
     .map(item => ({
       ...item,
-      unrealizedReturnRate: item.cost > 0 ? ((item.marketValue - item.cost) / item.cost) * 100 : 0,
+      unrealizedReturnRate:
+        item.cost > 0
+          ? multiplyMoney(divideMoney(subtractMoney(item.marketValue, item.cost), item.cost), 100)
+          : 0,
     }))
     .sort(
       (a, b) =>
@@ -294,19 +316,19 @@ async function HomeContent() {
 
   const twd_cash_total = cashAccounts
     .filter(item => item.currency === "TWD")
-    .reduce((sum, item) => sum + item.balance, 0);
+    .reduce((sum, item) => addMoney(sum, item.balance), 0);
 
   const foreign_cash_total = cashAccounts
     .filter(item => item.currency !== "TWD")
-    .reduce((sum, item) => sum + toTwdValue(item.balance, item.currency, ratesToTwd), 0);
+    .reduce((sum, item) => addMoney(sum, toTwdValue(item.balance, item.currency, ratesToTwd)), 0);
 
   const stock_total_value = stockValues.reduce(
-    (sum, item) => sum + toTwdValue(item.marketValue, item.currency, ratesToTwd),
+    (sum, item) => addMoney(sum, toTwdValue(item.marketValue, item.currency, ratesToTwd)),
     0
   );
 
   const fund_total_value = fundValues.reduce(
-    (sum, item) => sum + toTwdValue(item.marketValue, item.currency, ratesToTwd),
+    (sum, item) => addMoney(sum, toTwdValue(item.marketValue, item.currency, ratesToTwd)),
     0
   );
 

@@ -10,6 +10,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { formatCurrency } from "@/lib/format";
+import { addMoney, divideMoney, multiplyMoney } from "@/lib/money";
 
 import type { AssetValueItem } from "@/types/dashboard";
 
@@ -23,7 +24,7 @@ function formatPercent(value: number) {
 }
 
 export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) {
-  const total = items.reduce((sum, item) => sum + item.marketValue, 0);
+  const total = items.reduce((sum, item) => addMoney(sum, item.marketValue), 0);
   const palette = [
     "var(--color-chart-1)",
     "var(--color-chart-2)",
@@ -50,7 +51,7 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
     unrealizedReturnRate: item.unrealizedReturnRate,
     accountValues: item.accountValues,
     fill: `var(--color-slice${index})`,
-    ratio: total > 0 ? (item.marketValue / total) * 100 : 0,
+    ratio: total > 0 ? multiplyMoney(divideMoney(item.marketValue, total), 100) : 0,
   }));
 
   return (
@@ -108,7 +109,9 @@ export function AssetValueChartCard({ title, items }: AssetValueChartCardProps) 
                         <div className="space-y-1 border-t border-border/80 pt-1.5">
                           {accountValues.map(account => {
                             const ratio =
-                              totalValue > 0 ? (account.marketValue / totalValue) * 100 : 0;
+                              totalValue > 0
+                                ? multiplyMoney(divideMoney(account.marketValue, totalValue), 100)
+                                : 0;
 
                             return (
                               <div

@@ -10,6 +10,7 @@ import { StockSummaryStrip } from "@/components/stock/stock-summary-strip";
 import { StockTransactionEmpty } from "@/components/stock/stock-transaction-empty";
 import { Button } from "@/components/ui/button";
 import { toTwdValue } from "@/lib/currency-conversion";
+import { addMoney, divideMoney, multiplyMoney, subtractMoney } from "@/lib/money";
 import { getStockPriceKey } from "@/lib/stock-price";
 
 import type { StockPosition } from "@/components/stock/stock-list-data";
@@ -60,15 +61,18 @@ function buildStockPositions(transactions: StockTransaction[], quotes: StockPric
       });
 
     if (transaction.side === "sell") {
-      const averageCost = existing.quantity > 0 ? existing.costAmount / existing.quantity : 0;
+      const averageCost =
+        existing.quantity > 0 ? divideMoney(existing.costAmount, existing.quantity) : 0;
       const soldQuantity = Math.min(transaction.quantity, existing.quantity);
 
-      existing.quantity -= transaction.quantity;
+      existing.quantity = subtractMoney(existing.quantity, transaction.quantity);
       existing.costAmount =
-        existing.quantity > 0 ? existing.costAmount - averageCost * soldQuantity : 0;
+        existing.quantity > 0
+          ? subtractMoney(existing.costAmount, multiplyMoney(averageCost, soldQuantity))
+          : 0;
     } else {
-      existing.quantity += transaction.quantity;
-      existing.costAmount += transaction.net_amount;
+      existing.quantity = addMoney(existing.quantity, transaction.quantity);
+      existing.costAmount = addMoney(existing.costAmount, transaction.net_amount);
     }
 
     positionMap.set(key, existing);
@@ -77,10 +81,14 @@ function buildStockPositions(transactions: StockTransaction[], quotes: StockPric
   return Array.from(positionMap.entries())
     .map<StockPosition>(([key, position]) => {
       const quote = quoteMap.get(key);
-      const marketValue = quote?.close ? position.quantity * quote.close : position.costAmount;
-      const unrealizedPnl = marketValue - position.costAmount;
+      const marketValue = quote?.close
+        ? multiplyMoney(position.quantity, quote.close)
+        : position.costAmount;
+      const unrealizedPnl = subtractMoney(marketValue, position.costAmount);
       const unrealizedReturnRate =
-        position.costAmount > 0 ? (unrealizedPnl / position.costAmount) * 100 : 0;
+        position.costAmount > 0
+          ? multiplyMoney(divideMoney(unrealizedPnl, position.costAmount), 100)
+          : 0;
 
       return {
         ...position,
@@ -132,15 +140,21 @@ export function StocksClientPage({
   const summary = useMemo(() => {
     const totals = activePositions.reduce(
       (acc, item) => ({
-        marketValue: acc.marketValue + toTwdValue(item.marketValue, item.currency, ratesToTwd),
-        costAmount: acc.costAmount + toTwdValue(item.costAmount, item.currency, ratesToTwd),
+        marketValue: addMoney(
+          acc.marketValue,
+          toTwdValue(item.marketValue, item.currency, ratesToTwd)
+        ),
+        costAmount: addMoney(
+          acc.costAmount,
+          toTwdValue(item.costAmount, item.currency, ratesToTwd)
+        ),
       }),
       { marketValue: 0, costAmount: 0 }
     );
     const count = activePositions.length;
-    const unrealizedPnl = totals.marketValue - totals.costAmount;
+    const unrealizedPnl = subtractMoney(totals.marketValue, totals.costAmount);
     const unrealizedReturnRate =
-      totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
+      totals.costAmount > 0 ? multiplyMoney(divideMoney(unrealizedPnl, totals.costAmount), 100) : 0;
 
     return {
       count,

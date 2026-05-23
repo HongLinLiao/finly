@@ -144,6 +144,8 @@ export async function createFundTransaction(
   }
 
   revalidatePath("/funds");
+  revalidatePath("/brokerages/records");
+  revalidatePath("/");
 
   return {
     success: true,

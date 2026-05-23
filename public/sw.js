@@ -1,7 +1,6 @@
-const CACHE_NAME = "finly-static-v1";
+const CACHE_NAME = "finly-static-v2";
 const OFFLINE_URL = "/offline";
 const STATIC_ASSETS = [
-  "/",
   OFFLINE_URL,
   "/manifest.webmanifest",
   "/favicon.ico",
@@ -48,8 +47,20 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  if (requestUrl.pathname.startsWith("/_next/")) {
+  const acceptHeader = event.request.headers.get("accept") ?? "";
+  const isDynamicRequest =
+    requestUrl.pathname.startsWith("/_next/") ||
+    requestUrl.pathname.startsWith("/api/") ||
+    requestUrl.searchParams.has("_rsc") ||
+    acceptHeader.includes("text/x-component") ||
+    event.request.headers.has("next-router-prefetch");
+
+  if (isDynamicRequest) {
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  if (!STATIC_ASSETS.includes(requestUrl.pathname)) {
     return;
   }
 

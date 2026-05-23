@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { formatPercent, formatPrice } from "@/lib/format";
+import { divideMoney } from "@/lib/money";
 import {
   deleteStockTransaction,
   type DeleteStockTransactionState,
@@ -78,7 +79,7 @@ export const StockPositionCard = ({
     item.unrealizedPnl >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
   const returnColor =
     item.unrealizedReturnRate >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-500";
-  const averageCost = item.quantity > 0 ? item.costAmount / item.quantity : 0;
+  const averageCost = item.quantity > 0 ? divideMoney(item.costAmount, item.quantity) : 0;
 
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>

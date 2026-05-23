@@ -732,12 +732,14 @@ function MovementDialog({
     : accountOptions[0];
   const [selectedCashAccountId, setSelectedCashAccountId] = useState(defaultAccount?.id ?? "");
   const selectedCashAccount = accountOptions.find(item => item.id === selectedCashAccountId);
+  const router = useRouter();
 
   useEffect(() => {
     if (!state.success) return;
 
     onOpenChange(false);
-  }, [onOpenChange, state.success]);
+    router.refresh();
+  }, [onOpenChange, router, state.success]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

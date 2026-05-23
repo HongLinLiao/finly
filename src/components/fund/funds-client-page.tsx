@@ -9,6 +9,7 @@ import { FundHeader } from "@/components/fund/fund-header";
 import { FundPositionCard } from "@/components/fund/fund-position-card";
 import { FundSummaryStrip } from "@/components/fund/fund-summary-strip";
 import { Button } from "@/components/ui/button";
+import { addMoney, divideMoney, multiplyMoney, subtractMoney } from "@/lib/money";
 
 import type { FundPosition } from "@/components/fund/fund-list-data";
 import type { TaiwanFundOption } from "@/lib/cnyes-fund";
@@ -56,15 +57,18 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
       });
 
     if (transaction.side === "sell") {
-      const averageCost = existing.quantity > 0 ? existing.costAmount / existing.quantity : 0;
+      const averageCost =
+        existing.quantity > 0 ? divideMoney(existing.costAmount, existing.quantity) : 0;
       const soldQuantity = Math.min(transaction.quantity, existing.quantity);
 
-      existing.quantity -= transaction.quantity;
+      existing.quantity = subtractMoney(existing.quantity, transaction.quantity);
       existing.costAmount =
-        existing.quantity > 0 ? existing.costAmount - averageCost * soldQuantity : 0;
+        existing.quantity > 0
+          ? subtractMoney(existing.costAmount, multiplyMoney(averageCost, soldQuantity))
+          : 0;
     } else {
-      existing.quantity += transaction.quantity;
-      existing.costAmount += transaction.net_amount;
+      existing.quantity = addMoney(existing.quantity, transaction.quantity);
+      existing.costAmount = addMoney(existing.costAmount, transaction.net_amount);
     }
 
     existing.dividendMode = transaction.dividend_mode ?? existing.dividendMode;
@@ -76,10 +80,11 @@ function buildFundPositions(transactions: FundTransaction[], funds: TaiwanFundOp
     .map<FundPosition>(position => {
       const fund = fundMap.get(position.fundCode);
       const latestNav = fund?.latestNav ?? 0;
-      const marketValue = position.quantity * latestNav;
+      const marketValue = multiplyMoney(position.quantity, latestNav);
+      const unrealizedPnl = subtractMoney(marketValue, position.costAmount);
       const unrealizedReturnRate =
         position.costAmount > 0
-          ? ((marketValue - position.costAmount) / position.costAmount) * 100
+          ? multiplyMoney(divideMoney(unrealizedPnl, position.costAmount), 100)
           : 0;
 
       return {
@@ -126,16 +131,16 @@ export function FundsClientPage({ accounts, funds, transactions }: FundsClientPa
   const summary = useMemo(() => {
     const totals = activePositions.reduce(
       (acc, item) => ({
-        marketValue: acc.marketValue + item.marketValue,
-        costAmount: acc.costAmount + item.costAmount,
+        marketValue: addMoney(acc.marketValue, item.marketValue),
+        costAmount: addMoney(acc.costAmount, item.costAmount),
       }),
       { marketValue: 0, costAmount: 0 }
     );
 
     const count = activePositions.length;
-    const unrealizedPnl = totals.marketValue - totals.costAmount;
+    const unrealizedPnl = subtractMoney(totals.marketValue, totals.costAmount);
     const unrealizedReturnRate =
-      totals.costAmount > 0 ? (unrealizedPnl / totals.costAmount) * 100 : 0;
+      totals.costAmount > 0 ? multiplyMoney(divideMoney(unrealizedPnl, totals.costAmount), 100) : 0;
 
     return { count, marketValue: totals.marketValue, unrealizedPnl, unrealizedReturnRate };
   }, [activePositions]);

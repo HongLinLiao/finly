@@ -148,6 +148,8 @@ export async function createStockTransaction(
   }
 
   revalidatePath("/stocks");
+  revalidatePath("/brokerages/records");
+  revalidatePath("/");
 
   return {
     success: true,

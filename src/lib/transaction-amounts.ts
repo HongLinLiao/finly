@@ -1,7 +1,9 @@
+import { addMoney, multiplyMoney, subtractMoney } from "@/lib/money";
+
 import type { TradeSide } from "@/types";
 
 export function calculateGrossAmount(quantity: number, unitPrice: number) {
-  return quantity * unitPrice;
+  return multiplyMoney(quantity, unitPrice);
 }
 
 export function calculateNetAmount(
@@ -14,8 +16,8 @@ export function calculateNetAmount(
   const taxAmount = tax ?? 0;
 
   return side === "sell"
-    ? grossAmount - feeAmount - taxAmount
-    : grossAmount + feeAmount + taxAmount;
+    ? subtractMoney(subtractMoney(grossAmount, feeAmount), taxAmount)
+    : addMoney(addMoney(grossAmount, feeAmount), taxAmount);
 }
 
 export function getEffectiveGrossAmount({

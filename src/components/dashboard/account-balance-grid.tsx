@@ -12,6 +12,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { addMoney } from "@/lib/money";
 
 import { AccountBalanceCard } from "./account-balance-card";
 
@@ -71,7 +72,7 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
           balance: 0,
         };
 
-        existing.balance += account.balance;
+        existing.balance = addMoney(existing.balance, account.balance);
         item.balancesByCurrency.set(account.currency, existing);
         map.set(account.brokerage_account_id, item);
 

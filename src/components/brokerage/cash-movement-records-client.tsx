@@ -667,7 +667,7 @@ function MovementRow({
             </span>
             {linked ? <Badge variant="outline">關聯交易</Badge> : null}
           </div>
-          <p className="text-xs text-muted-foreground dark:text-zinc-500">
+          <p className="truncate text-xs text-muted-foreground dark:text-zinc-500">
             {toTimeValue(movement.occurred_at)} · {account?.brokerageName ?? "未知證券戶"} ·{" "}
             {account?.name ?? "未知資金戶"}
           </p>
@@ -758,7 +758,7 @@ function MovementDialog({
           />
           <input type="hidden" name="currency" value={selectedCashAccount?.currency ?? ""} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm sm:col-span-2">
               <span className="text-muted-foreground dark:text-zinc-500">
                 資金戶
@@ -776,8 +776,8 @@ function MovementDialog({
                 <SelectContent>
                   {accountOptions.map(option => (
                     <SelectItem key={option.id} value={option.id}>
-                      <span className="font-medium">{option.name}</span>
-                      <span className="text-muted-foreground">
+                      <span className="min-w-0 truncate font-medium">{option.name}</span>
+                      <span className="min-w-0 truncate text-muted-foreground">
                         {option.brokerageName} · {option.currency}
                       </span>
                     </SelectItem>

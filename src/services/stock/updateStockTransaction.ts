@@ -11,6 +11,7 @@ import {
 } from "@/lib/form";
 import { findStockOption } from "@/lib/stock-options";
 import updateStockTransactionRecord from "@/lib/supabase/stock/updateStockTransaction";
+import { calculateGrossAmount, calculateNetAmount } from "@/lib/transaction-amounts";
 
 import type { TradeSide } from "@/types";
 
@@ -23,10 +24,6 @@ const INITIAL_ERROR_STATE: UpdateStockTransactionState = {
   success: false,
   message: "",
 };
-
-function calculateNetAmount(side: TradeSide, grossAmount: number, fee: number, tax: number) {
-  return side === "sell" ? grossAmount - fee - tax : grossAmount + fee + tax;
-}
 
 export async function updateStockTransaction(
   _previousState: UpdateStockTransactionState,
@@ -52,8 +49,8 @@ export async function updateStockTransaction(
   const quantity = normalizeNumber(formData.get("quantity"));
   const unitPrice = normalizeNumber(formData.get("unitPrice"));
   const grossAmountInput = normalizeNumber(formData.get("grossAmount"));
-  const fee = normalizeNumber(formData.get("fee")) ?? 0;
-  const tax = normalizeNumber(formData.get("tax")) ?? 0;
+  const fee = normalizeNumber(formData.get("fee"));
+  const tax = normalizeNumber(formData.get("tax"));
   const netAmountInput = normalizeNumber(formData.get("netAmount"));
   const cashSettlementAmountInput = normalizeNumber(formData.get("cashSettlementAmount"));
   const currency = normalizeCurrency(formData.get("currency"));
@@ -106,14 +103,14 @@ export async function updateStockTransaction(
     };
   }
 
-  if (quantity <= 0 || unitPrice < 0 || fee < 0 || tax < 0) {
+  if (quantity <= 0 || unitPrice < 0 || (fee !== null && fee < 0) || (tax !== null && tax < 0)) {
     return {
       ...INITIAL_ERROR_STATE,
       message: "數量、單價與費用不可為負數。",
     };
   }
 
-  const grossAmount = grossAmountInput ?? quantity * unitPrice;
+  const grossAmount = grossAmountInput ?? calculateGrossAmount(quantity, unitPrice);
   const netAmount = netAmountInput ?? calculateNetAmount(side, grossAmount, fee, tax);
 
   if (cashSettlementAmountInput !== null && cashSettlementAmountInput <= 0) {
@@ -135,10 +132,11 @@ export async function updateStockTransaction(
       side,
       quantity,
       unitPrice,
-      grossAmount,
+      grossAmount: grossAmountInput,
       fee,
       tax,
-      netAmount,
+      netAmount: netAmountInput,
+      effectiveNetAmount: netAmount,
       currency,
       cashSettlementAmount: cashSettlementAmountInput,
       note,

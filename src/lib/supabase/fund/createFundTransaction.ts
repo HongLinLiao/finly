@@ -15,10 +15,11 @@ export interface CreateFundTransactionRecordInput {
   dividendMode?: DividendMode | null;
   quantity: number;
   unitPrice: number;
-  grossAmount: number;
+  grossAmount?: number | null;
   fee?: number | null;
   tax?: number | null;
-  netAmount: number;
+  netAmount?: number | null;
+  effectiveNetAmount: number;
   currency: CurrencyCode;
   cashSettlementAmount?: number | null;
   note?: string | null;
@@ -60,7 +61,7 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
 
   const cashSettlementAmount =
     input.cashSettlementAmount ??
-    (cashAccount.currency === input.currency ? input.netAmount : null);
+    (cashAccount.currency === input.currency ? input.effectiveNetAmount : null);
 
   if (!cashSettlementAmount) {
     throw new Error("Cash settlement amount is required for cross-currency transactions.");
@@ -79,10 +80,11 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
       dividend_mode: input.dividendMode ?? null,
       quantity: input.quantity,
       unit_price: input.unitPrice,
-      gross_amount: input.grossAmount,
+      gross_amount: input.grossAmount ?? null,
       fee: input.fee ?? null,
       tax: input.tax ?? null,
-      net_amount: input.netAmount,
+      net_amount: input.netAmount ?? null,
+      cash_settlement_amount: input.cashSettlementAmount ?? null,
       currency: input.currency,
       note: input.note ?? null,
     })
@@ -117,7 +119,7 @@ async function createFundTransactionRecord(input: CreateFundTransactionRecordInp
     note:
       cashAccount.currency === input.currency
         ? input.note
-        : `交易淨額 ${input.currency} ${input.netAmount}`,
+        : `交易淨額 ${input.currency} ${input.effectiveNetAmount}`,
   });
 
   return data;

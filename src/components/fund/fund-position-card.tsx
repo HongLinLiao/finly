@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency, formatPercent, formatPrice } from "@/lib/format";
 import {
   deleteFundTransaction,
   type DeleteFundTransactionState,
@@ -105,14 +105,17 @@ export const FundPositionCard = ({
                 }`}
               />
 
-              <div className="space-y-1.5">
-                <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground dark:text-zinc-100">
-                  <span>{item.name}</span>
-                  <Badge variant="outline" className="border-border bg-muted/30 text-foreground">
+              <div className="min-w-0 space-y-1.5">
+                <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground dark:text-zinc-100">
+                  <span className="min-w-0 truncate">{item.name}</span>
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 border-border bg-muted/30 text-foreground"
+                  >
                     {item.symbol}
                   </Badge>
                 </p>
-                <p className="text-xs text-muted-foreground dark:text-zinc-500">
+                <p className="truncate text-xs text-muted-foreground dark:text-zinc-500">
                   {item.fundHouse} · {item.risk} · {dividendLabel} · {item.currency}
                 </p>
               </div>
@@ -247,12 +250,12 @@ function FundTransactionRow({
             </span>
             <Badge variant="outline">{formatTransactionDate(transaction.trade_date)}</Badge>
           </div>
-          <p className="text-xs text-muted-foreground dark:text-zinc-500">
+          <p className="truncate text-xs text-muted-foreground dark:text-zinc-500">
             {getAccountLabel(accounts, transaction)}
           </p>
           <p className="text-xs text-muted-foreground dark:text-zinc-500">
             {transaction.quantity.toLocaleString("zh-TW")} 單位 · 淨值{" "}
-            {transaction.unit_price.toLocaleString("zh-TW")}
+            {formatPrice(transaction.unit_price, transaction.currency)}
           </p>
         </div>
 

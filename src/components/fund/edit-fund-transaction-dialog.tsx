@@ -80,7 +80,9 @@ function toNavDateInputValue(value: string) {
 function FundOptionContent({ fund }: { fund: TaiwanFundOption }) {
   return (
     <>
-      <span className="min-w-16 font-medium text-foreground">{fund.fundCode}</span>
+      <span className="min-w-0 max-w-24 shrink-0 truncate font-medium text-foreground">
+        {fund.fundCode}
+      </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-foreground">{fund.fundName}</span>
         <span className="truncate text-xs font-normal text-muted-foreground">
@@ -158,7 +160,7 @@ function EditFundTransactionForm({
       <input type="hidden" name="side" value={side} />
       <input type="hidden" name="currency" value={selectedFund?.currency ?? transaction.currency} />
 
-      <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm sm:col-span-2">
           <span className="text-muted-foreground dark:text-zinc-100">
             基金
@@ -172,14 +174,14 @@ function EditFundTransactionForm({
                 role="combobox"
                 aria-expanded={isFundSearchOpen}
                 disabled={!hasFunds}
-                className="h-auto min-h-9 w-full justify-between gap-3 rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
+                className="h-auto min-h-9 w-full min-w-0 justify-between gap-3 overflow-hidden rounded-3xl border border-transparent bg-input/50 px-3 py-2 text-left font-normal hover:bg-input/50 hover:text-foreground aria-expanded:bg-input/50 aria-expanded:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:border-white/10 dark:bg-zinc-900/85 dark:hover:bg-zinc-900/85 dark:aria-expanded:bg-zinc-900/85"
               >
                 {selectedFund ? (
-                  <span className="flex min-w-0 flex-1 items-start gap-2">
+                  <span className="flex min-w-0 flex-1 items-start gap-2 overflow-hidden">
                     <FundOptionContent fund={selectedFund} />
                   </span>
                 ) : (
-                  <span className="text-muted-foreground dark:text-zinc-400">
+                  <span className="min-w-0 truncate text-muted-foreground dark:text-zinc-400">
                     {hasFunds ? transaction.fund_code : "基金資料暫時無法載入"}
                   </span>
                 )}
@@ -216,7 +218,7 @@ function EditFundTransactionForm({
                           setSelectedFundCode(fund.fundCode);
                           setIsFundSearchOpen(false);
                         }}
-                        className="items-start [&>svg:last-child]:hidden"
+                        className="min-w-0 items-start [&>svg:last-child]:hidden"
                       >
                         <FundOptionContent fund={fund} />
                         <Check
@@ -246,8 +248,8 @@ function EditFundTransactionForm({
             <SelectContent>
               {cashAccountOptions.map(account => (
                 <SelectItem key={account.id} value={account.id}>
-                  <span className="font-medium">{account.cashAccountName}</span>
-                  <span className="text-muted-foreground">
+                  <span className="min-w-0 truncate font-medium">{account.cashAccountName}</span>
+                  <span className="min-w-0 truncate text-muted-foreground">
                     {account.brokerageName} · {account.currency}
                   </span>
                 </SelectItem>
@@ -370,7 +372,7 @@ function EditFundTransactionForm({
             type="number"
             min="0"
             step="0.01"
-            defaultValue={transaction.gross_amount}
+            defaultValue={transaction.gross_amount_input ?? ""}
           />
         </label>
 
@@ -383,7 +385,7 @@ function EditFundTransactionForm({
             type="number"
             min="0"
             step="0.01"
-            defaultValue={transaction.net_amount}
+            defaultValue={transaction.net_amount_input ?? ""}
           />
         </label>
 
@@ -398,7 +400,7 @@ function EditFundTransactionForm({
             min="0"
             step="0.01"
             required={hasSettlementCurrencyMismatch}
-            defaultValue={transaction.cash_settlement_amount ?? transaction.net_amount}
+            defaultValue={transaction.cash_settlement_amount_input ?? ""}
             placeholder={
               selectedCashAccount
                 ? `${selectedCashAccount.currency} 金額；同幣別不填會沿用交易淨額`

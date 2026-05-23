@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { formatPercent } from "@/lib/format";
+import { formatPercent, formatPrice } from "@/lib/format";
 import {
   deleteStockTransaction,
   type DeleteStockTransactionState,
@@ -143,12 +143,12 @@ export const StockPositionCard = ({
                 valueClassName={returnColor}
               />
               <DetailField label="持有股數" value={`${formatNumber(item.quantity, 4)} 股`} />
-              <DetailField label="平均成本" value={formatCurrency(averageCost, item.currency)} />
+              <DetailField label="平均成本" value={formatPrice(averageCost, item.currency)} />
               <DetailField
                 label="最新收盤價"
                 value={
                   item.latestClose
-                    ? `${formatCurrency(item.latestClose, item.currency)}${
+                    ? `${formatPrice(item.latestClose, item.currency)}${
                         item.priceDate ? ` · ${item.priceDate}` : ""
                       }`
                     : "—"
@@ -249,7 +249,7 @@ function StockTransactionRow({
           </p>
           <p className="text-xs text-muted-foreground dark:text-zinc-500">
             {formatNumber(transaction.quantity, 4)} 股 · 單價{" "}
-            {formatCurrency(transaction.unit_price, transaction.currency)}
+            {formatPrice(transaction.unit_price, transaction.currency)}
           </p>
         </div>
 

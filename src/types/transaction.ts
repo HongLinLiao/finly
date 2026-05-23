@@ -17,14 +17,18 @@ export interface BaseTransaction {
   quantity: number;
   /** 每單位價格（股票成交價 / 基金淨值） */
   unit_price: number;
-  /** 原始成交金額（未扣手續費與稅） */
+  /** 原始成交金額（未扣手續費與稅）；讀取後會補上系統計算值 */
   gross_amount: number;
+  /** 使用者實際填寫的原始成交金額；未填則為 null */
+  gross_amount_input?: number | null;
   /** 手續費 */
   fee?: number;
   /** 稅額（股票常見） */
   tax?: number;
-  /** 實際扣款或入帳金額 */
+  /** 實際扣款或入帳金額；讀取後會補上系統計算值 */
   net_amount: number;
+  /** 使用者實際填寫的交易淨額；未填則為 null */
+  net_amount_input?: number | null;
   /** 幣別，例如 TWD、USD */
   currency: CurrencyCode;
   /** 備註 */
@@ -42,6 +46,8 @@ export interface StockTransaction extends BaseTransaction {
   cash_account_id?: string;
   /** 資金戶實際入帳 / 扣款金額 */
   cash_settlement_amount?: number;
+  /** 使用者實際填寫的資金戶入扣款金額；未填則為 null */
+  cash_settlement_amount_input?: number | null;
   /** 交易市場，例如 TWSE、NASDAQ */
   market?: string;
 }
@@ -53,6 +59,8 @@ export interface FundTransaction extends BaseTransaction {
   cash_account_id?: string;
   /** 資金戶實際入帳 / 扣款金額 */
   cash_settlement_amount?: number;
+  /** 使用者實際填寫的資金戶入扣款金額；未填則為 null */
+  cash_settlement_amount_input?: number | null;
   /** 淨值日（Unix timestamp） */
   nav_date?: Timestamp;
   /** 申購 / 贖回 / 轉入 / 轉出 */

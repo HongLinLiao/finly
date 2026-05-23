@@ -42,7 +42,7 @@ const DESKTOP_MENU = [
     icon: Building2,
     items: [
       { title: "帳戶交易", icon: ArrowLeftRight, href: "/brokerages/records", exact: false },
-      { title: "證券戶設定", href: "/brokerages", icon: Settings, exact: true },
+      { title: "帳戶設定", href: "/brokerages", icon: Settings, exact: true },
     ],
   },
 ] as const;

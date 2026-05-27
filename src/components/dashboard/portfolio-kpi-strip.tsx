@@ -53,16 +53,6 @@ export function PortfolioKpiStrip({
 }: PortfolioKpiStripProps) {
   const kpis = [
     {
-      label: "台幣現金總額",
-      value: twdCashTotal,
-      icon: Landmark,
-    },
-    {
-      label: "外幣折台總額",
-      value: foreignCashTotal,
-      icon: Coins,
-    },
-    {
       label: "股票現值",
       value: stockTotalValue,
       icon: LineChart,
@@ -71,6 +61,16 @@ export function PortfolioKpiStrip({
       label: "基金現值",
       value: fundTotalValue,
       icon: PiggyBank,
+    },
+    {
+      label: "台幣現金總額",
+      value: twdCashTotal,
+      icon: Landmark,
+    },
+    {
+      label: "外幣折台總額",
+      value: foreignCashTotal,
+      icon: Coins,
     },
   ];
 

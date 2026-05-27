@@ -12,6 +12,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { toTwdValue } from "@/lib/currency-conversion";
 import { addMoney } from "@/lib/money";
 
 import { AccountBalanceCard } from "./account-balance-card";
@@ -20,6 +21,7 @@ import type { OverviewCashAccount } from "@/types/dashboard";
 
 interface AccountBalanceGridProps {
   accounts: OverviewCashAccount[];
+  ratesToTwd: Record<string, number>;
 }
 
 type BalanceViewMode = "cash" | "brokerage";
@@ -29,7 +31,7 @@ const viewModeLabels: Record<BalanceViewMode, string> = {
   brokerage: "證券戶",
 };
 
-export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
+export function AccountBalanceGrid({ accounts, ratesToTwd }: AccountBalanceGridProps) {
   const [viewMode, setViewMode] = useState<BalanceViewMode>("cash");
   const cardItems = useMemo(() => {
     if (viewMode === "cash") {
@@ -37,6 +39,11 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
         id: account.id,
         title: account.account_name ?? account.currency,
         subtitle: account.brokerageAccountName,
+        summary: {
+          label: "總餘額",
+          value: account.balance,
+          currency: account.currency,
+        },
         balances: [
           {
             id: account.id,
@@ -53,8 +60,9 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
         const item = map.get(account.brokerage_account_id) ?? {
           id: account.brokerage_account_id,
           title: account.brokerageAccountName,
-          subtitle: "依資金戶彙總",
-          balancesByCurrency: new Map<
+          subtitle: "",
+          totalTwdBalance: 0,
+          balances: new Map<
             string,
             {
               id: string;
@@ -65,15 +73,19 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
           >(),
         };
 
-        const existing = item.balancesByCurrency.get(account.currency) ?? {
-          id: `${account.brokerage_account_id}-${account.currency}`,
-          label: account.currency,
+        item.totalTwdBalance = addMoney(
+          item.totalTwdBalance,
+          toTwdValue(account.balance, account.currency, ratesToTwd)
+        );
+        const existing = item.balances.get(account.id) ?? {
+          id: account.id,
+          label: account.account_name ?? account.currency,
           currency: account.currency,
           balance: 0,
         };
 
         existing.balance = addMoney(existing.balance, account.balance);
-        item.balancesByCurrency.set(account.currency, existing);
+        item.balances.set(account.id, existing);
         map.set(account.brokerage_account_id, item);
 
         return map;
@@ -84,7 +96,8 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
           id: string;
           title: string;
           subtitle: string;
-          balancesByCurrency: Map<
+          totalTwdBalance: number;
+          balances: Map<
             string,
             {
               id: string;
@@ -101,11 +114,16 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
       id: item.id,
       title: item.title,
       subtitle: item.subtitle,
-      balances: Array.from(item.balancesByCurrency.values()).sort((a, b) =>
-        a.currency.localeCompare(b.currency)
+      summary: {
+        label: "折合台幣總額",
+        value: item.totalTwdBalance,
+        currency: "TWD",
+      },
+      balances: Array.from(item.balances.values()).sort(
+        (a, b) => a.currency.localeCompare(b.currency) || a.label.localeCompare(b.label)
       ),
     }));
-  }, [accounts, viewMode]);
+  }, [accounts, ratesToTwd, viewMode]);
 
   return (
     <section className="space-y-4">
@@ -158,6 +176,7 @@ export function AccountBalanceGrid({ accounts }: AccountBalanceGridProps) {
               <AccountBalanceCard
                 title={item.title}
                 subtitle={item.subtitle}
+                summary={item.summary}
                 balances={item.balances}
               />
             </CarouselItem>

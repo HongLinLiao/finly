@@ -343,7 +343,7 @@ async function HomeContent() {
         fundTotalValue={fund_total_value}
       />
 
-      <AccountBalanceGrid accounts={cashAccounts} />
+      <AccountBalanceGrid accounts={cashAccounts} ratesToTwd={ratesToTwd} />
 
       <AssetValueTabs stockValues={stockValues} fundValues={fundValues} />
     </>

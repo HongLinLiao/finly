@@ -16,7 +16,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 
 import { AddFundTransactionDialog } from "@/components/fund/add-fund-transaction-dialog";
 import { EditFundTransactionDialog } from "@/components/fund/edit-fund-transaction-dialog";
@@ -331,12 +331,14 @@ export function CashMovementRecordsClient({
         />
       </header>
 
-      <MovementDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        accountOptions={accountOptions}
-        defaultDateKey={selectedDateKey}
-      />
+      {createOpen ? (
+        <MovementDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          accountOptions={accountOptions}
+          defaultDateKey={selectedDateKey}
+        />
+      ) : null}
       <AddStockTransactionDialog
         open={stockDialogOpen}
         onOpenChange={setStockDialogOpen}
@@ -638,7 +640,7 @@ function MovementRow({
           transaction={fundTransaction}
         />
       ) : null}
-      {editMode === "cash" ? (
+      {editMode === "cash" && editOpen ? (
         <MovementDialog
           open={editOpen}
           onOpenChange={setEditOpen}
@@ -733,13 +735,20 @@ function MovementDialog({
   const [selectedCashAccountId, setSelectedCashAccountId] = useState(defaultAccount?.id ?? "");
   const selectedCashAccount = accountOptions.find(item => item.id === selectedCashAccountId);
   const router = useRouter();
+  const wasPendingRef = useRef(false);
 
   useEffect(() => {
-    if (!state.success) return;
+    if (isPending) {
+      wasPendingRef.current = true;
+      return;
+    }
 
+    if (!wasPendingRef.current || !state.success) return;
+
+    wasPendingRef.current = false;
     onOpenChange(false);
     router.refresh();
-  }, [onOpenChange, router, state.success]);
+  }, [isPending, onOpenChange, router, state.success]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -953,12 +962,19 @@ function DeleteMovementDialog({
     deleteCashAccountMovement,
     deleteInitialState
   );
+  const wasPendingRef = useRef(false);
 
   useEffect(() => {
-    if (!state.success) return;
+    if (isPending) {
+      wasPendingRef.current = true;
+      return;
+    }
 
+    if (!wasPendingRef.current || !state.success) return;
+
+    wasPendingRef.current = false;
     onOpenChange(false);
-  }, [onOpenChange, state.success]);
+  }, [isPending, onOpenChange, state.success]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

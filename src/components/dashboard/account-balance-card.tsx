@@ -6,6 +6,11 @@ import { formatCurrency } from "@/lib/format";
 interface AccountBalanceCardProps {
   title: string;
   subtitle?: string;
+  summary?: {
+    label: string;
+    value: number;
+    currency: string;
+  };
   balances: {
     id: string;
     label: string;
@@ -14,9 +19,17 @@ interface AccountBalanceCardProps {
   }[];
 }
 
-export function AccountBalanceCard({ title, subtitle, balances }: AccountBalanceCardProps) {
+export function AccountBalanceCard({
+  title,
+  subtitle,
+  summary,
+  balances,
+}: AccountBalanceCardProps) {
   const primaryBalance = balances[0];
   const hasMultipleBalances = balances.length > 1;
+  const summaryLabel = summary?.label ?? "總餘額";
+  const summaryValue = summary?.value ?? primaryBalance?.balance ?? 0;
+  const summaryCurrency = summary?.currency ?? primaryBalance?.currency ?? "TWD";
 
   return (
     <Card className="group relative h-full overflow-hidden py-0 shadow-none transition duration-300">
@@ -43,13 +56,9 @@ export function AccountBalanceCard({ title, subtitle, balances }: AccountBalance
         </header>
 
         <section>
-          <p className="text-xs text-muted-foreground dark:text-zinc-500">
-            {hasMultipleBalances ? "多幣別餘額" : "總餘額"}
-          </p>
+          <p className="text-xs text-muted-foreground dark:text-zinc-500">{summaryLabel}</p>
           <p className="mt-1 text-[1.65rem] leading-none font-semibold tracking-tight text-foreground dark:text-zinc-50">
-            {hasMultipleBalances
-              ? `${balances.length} 個幣別`
-              : formatCurrency(primaryBalance?.balance ?? 0, primaryBalance?.currency ?? "TWD")}
+            {formatCurrency(summaryValue, summaryCurrency)}
           </p>
         </section>
 

@@ -1,7 +1,7 @@
 {
-  "name": "Finly",
+  "name": "Finly｜個人資產管理儀表板",
   "short_name": "Finly",
-  "description": "Finly - Your financial dashboard",
+  "description": "集中追蹤現金、股票與基金，清楚掌握你的資產配置與投資表現。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

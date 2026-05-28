@@ -5,11 +5,29 @@ import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import { AuthProvider } from "@/components/provider/auth-provider";
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
+import { environment } from "@/lib/environment";
 import { cn } from "@/lib/utils";
 
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
+
+function getSiteUrl() {
+  if (!environment.lineRedirectUri) {
+    return "http://localhost:3000";
+  }
+
+  try {
+    return new URL(environment.lineRedirectUri).origin;
+  } catch {
+    return "http://localhost:3000";
+  }
+}
+
+const siteUrl = getSiteUrl();
+
+const siteTitle = "Finly｜個人資產管理儀表板";
+const siteDescription = "集中追蹤現金、股票與基金，清楚掌握你的資產配置與投資表現。";
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -28,8 +46,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finly",
-  description: "Finly - Your financial dashboard",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteTitle,
+    template: "%s｜Finly",
+  },
+  description: siteDescription,
+  applicationName: "Finly",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -44,6 +67,28 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Finly",
+  },
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: "/",
+    siteName: "Finly",
+    locale: "zh_TW",
+    type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1024,
+        height: 1024,
+        alt: "Finly",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: siteTitle,
+    description: siteDescription,
+    images: ["/logo.png"],
   },
 };
 
